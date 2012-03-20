@@ -4,7 +4,10 @@ version control system.
 
 Install with:
 
-`gem install git-whistles`
+    git clone git://github.com/mezis/git-whistles.git <clone-dir>
+
+Add `<clone-dir>/bin` to your `$PATH`
+
 
 ## chop
 
