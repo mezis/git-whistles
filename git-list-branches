@@ -1,6 +1,8 @@
 #!/bin/bash
 #
-# List branch status and age against an integration branch.
+# git-list-branches --
+# 
+#   List branch status and age against an integration branch.
 #
 # Copyright (C) 2012 Julien Letessier
 # 
