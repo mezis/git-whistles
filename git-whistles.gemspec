@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name        = "git-whistles"
-  s.version     = '0.1.0'
+  s.version     = '0.1.1'
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Julien Letessier"]
   s.email       = ["julien.letessier@gmail.com"]
@@ -15,5 +15,5 @@ Gem::Specification.new do |s|
   s.files        = `git ls-files`.split("\n")
   s.test_files   = []
   s.executables  = `git ls-files`.split("\n").map{|f| f =~ /^bin\/(.*)/ ? $1 : nil}.compact
-  s.require_path = nil
+  s.require_path = 'lib'
 end
