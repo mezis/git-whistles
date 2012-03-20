@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+# Push to the stash, checkout, and pop the relevant WIP stash.
+#
+
+head=$(git symbolic-ref HEAD 2> /dev/null || git log -1 --format=%h)
+current_branch=${head#refs/heads/}
+target_branch=$1
+
+git stash
+git checkout $target_branch
+
+stash=$(git stash list | grep "WIP on ${target_branch}:")
+stash=${stash%%:*}
+
+if test -n "$stash" ; then
+  echo "Popping $stash"
+  git stash pop $stash
+fi
