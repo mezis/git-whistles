@@ -25,13 +25,16 @@
 # SOFTWARE.
 #
 
+die() {
+  echo "$@" ; exit 1
+}
 
 head=$(git symbolic-ref HEAD 2> /dev/null || git log -1 --format=%h)
 current_branch=${head#refs/heads/}
 target_branch=$1
 
-git stash
-git checkout $target_branch
+git stash || die
+git checkout $target_branch || die
 
 stash=$(git stash list | grep "WIP on ${target_branch}:")
 stash=${stash%%:*}
