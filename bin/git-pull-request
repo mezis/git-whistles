@@ -26,7 +26,13 @@
 #
 require 'CGI'
 
-repo = 'HouseTrip/HouseTrip-Web-App'
+origin_url = `git config --get remote.origin.url`.strip
+unless origin_url =~ /github\.com/
+  puts "origin does not have a Github URL !"
+  exit 1
+end
+
+repo = origin_url.sub(/.*github\.com[\/:]/,'').sub(/\.git$/,'')
 
 if ARGV[0]
   branch = ARGV[0]
