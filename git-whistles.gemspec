@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Julien Letessier"]
   s.email       = ["julien.letessier@gmail.com"]
-  s.homepage    = "https://github.com/mezus/git-whistles"
+  s.homepage    = "https://github.com/mezis/git-whistles"
   s.summary     = "A few bells and whistles for Git"
   s.description = "A few bells and whistles for Git: chop, list-branches, merge-po, stash-and-checkout"
 
