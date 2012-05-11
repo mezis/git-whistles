@@ -100,6 +100,7 @@ _check_all_branches() {
 _color_by_duration() {
   while read LINE ; do
     case "$LINE" in
+      (*+0*)      color=$(_xterm_color 1 1 1) ;;
       (*minute*)  color=$(_xterm_color 0 5 0) ;;
       (*hour*)    color=$(_xterm_color 0 5 0) ;;
       (*days*)    color=$(_xterm_color 5 5 0) ;;
