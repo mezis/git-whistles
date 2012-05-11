@@ -46,6 +46,8 @@ if branch == 'master'
   exit 1
 end
 
-url = "https://github.com/#{repo}/pull/new?base_repo=#{CGI.escape(repo)}&base_ref=master&head_ref=#{branch}"
+against = ARGV[1] || 'master'
+
+url = "https://github.com/#{repo}/pull/new?base_repo=#{CGI.escape(repo)}&base_ref=#{against}&head_ref=#{branch}"
 puts "Preparing a pull request for branch #{branch}"
 system "open", url
