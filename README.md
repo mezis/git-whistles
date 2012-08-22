@@ -1,4 +1,3 @@
-
 This repository is about sharing helper scripts for the [Git](http://git-scm.com/)
 version control system.
 
@@ -64,3 +63,10 @@ unstashed.
 This lets you keep work in progress on multiple branches without committing it.
 
 I tend to alias this to `git co`.
+
+
+## outstanding-features
+
+`git checkout production ; git outstanding-features`
+
+Lists the merge pull-requests that are on `production` but not (yet) on `origin/production`.
