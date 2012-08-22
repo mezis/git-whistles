@@ -1,0 +1,3 @@
+#!/bin/sh
+
+git log --oneline production ^origin/production | grep 'Merge pull request' | sed  -e 's:.*from [^/]*/::'
