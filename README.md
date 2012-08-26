@@ -8,21 +8,22 @@ Install with:
 Add `<clone-dir>/bin` to your `$PATH`
 
 
-## chop
+#### chop
 
 `git chop [branch]`
 
 Delete the local and origin copy of a branch.
 Useful to close feature branches once a feature is completed.
 
-## list-branches
+#### list-branches
+ 
 
 `git list-branches [-l] [-r] [-i integration-branch]`
 
 Colourful listing of all local or origin branches, and their distance to an
 integration branch (`master` by default).
 
-## merge-po
+#### merge-po
 
 `git merge-po <ancestor> <left> <right>`
 
@@ -44,7 +45,7 @@ Add this to .gitattributes:
     *.pot  merge=pofile
 
 
-## pull-request
+#### pull-request
 
 `git-pull-request [branch]`
 
@@ -52,7 +53,7 @@ Open your browser at a Github pull-request page for the specified branch
 (defaults to the current `head`).
 
 
-## stash-and-checkout
+#### stash-and-checkout
 
 `git stash-and-checkout [branch]`
 
