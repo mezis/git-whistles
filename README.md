@@ -66,7 +66,7 @@ This lets you keep work in progress on multiple branches without committing it.
 I tend to alias this to `git co`.
 
 
-## outstanding-features
+#### outstanding-features
 
 `git checkout production ; git outstanding-features`
 
