@@ -1,7 +1,5 @@
 #!/bin/sh
 
-set -x
-
 from=${1:-origin/production}
 to=${2:-production}
 
