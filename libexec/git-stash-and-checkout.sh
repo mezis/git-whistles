@@ -36,7 +36,7 @@ target_branch=$1
 git stash --include-untracked || die
 git checkout $target_branch || die
 
-stash=$(git stash list | grep "WIP on ${target_branch}:")
+stash=$(git stash list | grep "WIP on ${target_branch}:" | head -1)
 stash=${stash%%:*}
 
 if test -n "$stash" ; then
