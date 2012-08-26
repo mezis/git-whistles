@@ -1,7 +1,6 @@
-require "/tmp/git-whistles/version"
+require "git-whistles/version"
 
-module /tmp/git
+module Git
   module Whistles
-    # Your code goes here...
   end
 end

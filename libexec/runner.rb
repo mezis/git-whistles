@@ -3,10 +3,14 @@
 # runner.rb --
 #
 #   Run shell scripts from a gem.
+#   Symlink to this script to run a script with the same name living in
+#   libexec/.
 #
 require 'pathname'
+require 'rubygems'
+require 'git-whistles'
 
-caller_path = Pathname.new($0)
-script_path = caller_path.join('../../libexec', "#{caller_path.basename}.sh").cleanpath
+target_script = Pathname.new($0).basename
+script_path = Git::Whistles::GEMDIR.join('libexec', "#{target_script}.sh").cleanpath
 
 Kernel.exec script_path, *ARGV

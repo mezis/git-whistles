@@ -12,6 +12,11 @@ Gem::Specification.new do |gem|
   }
   gem.homepage      = "http://github.com/mezis/git-whistles"
 
+  gem.required_rubygems_version = ">= 1.3.6"
+
+  gem.add_development_dependency "bundler", ">= 1.0.0"
+  gem.add_development_dependency "rake"
+
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
