@@ -4,6 +4,9 @@
 # 
 #   Open a pull request for the current branch in your default browser
 # 
+#   Assumes the branches are named
+#   <team>/<branch-title>-<story-id>
+# 
 # Copyright (C) 2012 Julien Letessier
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -24,7 +27,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-require 'CGI'
+# require 'CGI'
+require 'rubygems'
+require 'pivotal-tracker'
+require 'term/ansicolor'
 
 origin_url = `git config --get remote.origin.url`.strip
 unless origin_url =~ /github\.com/
@@ -48,6 +54,60 @@ end
 
 against = ARGV[1] || 'master'
 
-url = "https://github.com/#{repo}/pull/new?base_repo=#{CGI.escape(repo)}&base_ref=#{against}&head_ref=#{branch}"
+# build the base query
+query = {
+  :base_repo => repo,
+  :base_ref  => against,
+  :head_ref  => branch
+}
+
+# guess team name
+if branch =~ %r{^(\w+)/.*}
+  team = $1.capitalize
+end
+
+# guess title.
+title = branch.split('/').last.split(/[_-]/).delete_if { |word| word =~ /^\d+$/ }.join(' ').capitalize
+query[:title] = "#{team}: #{title}"
+
+# find the PT story, or fall back to the branch-name-based titling
+if branch =~ /(\d+)$/
+  story_id = $1.to_i
+  token = `git config pivotal-tracker.token`.strip
+  if token.empty?
+    puts Term::ANSIColor.yellow %Q{
+      I don't know your Pivotal Tracker token!
+      Please set it with:
+      $ git config pivotal-tracker.token <token>
+    }
+  else
+    $stdout.write Term::ANSIColor.green "Finding your project and story "
+    $stdout.flush
+
+    PivotalTracker::Client.token = token
+    story, project = PivotalTracker::Project.all.find do |project|
+      $stdout.write Term::ANSIColor.green '.'
+      $stdout.flush
+      story = project.stories.find(story_id) and break story, project
+    end
+    $stdout.puts
+
+    if story.nil?
+      puts Term::ANSIColor.yellow "Apologies... I could not find story #{story_id}."
+    else
+      $stdout.puts Term::ANSIColor.green "Found story #{story_id} in '#{project.name}'"
+
+      headline = "Pivotal tracker story [##{story_id}](#{story.url}) in project *#{project.name}*:"
+      description = story.description.split("\n").map { |line| "> #{line}" }
+      body = "#{headline}\n\n#{description}"
+      title = "#{project.name}: #{story.name} [##{story.id}]"
+
+      query.merge! :subject => story.name, :body => body, :title => title
+    end
+  end
+end
+
+query_string = query.map { |key,value| "#{CGI.escape key.to_s}=#{CGI.escape value}"}.join('&')
+url = "https://github.com/#{repo}/pull/new?#{query_string}"
 puts "Preparing a pull request for branch #{branch}"
 system "open", url
