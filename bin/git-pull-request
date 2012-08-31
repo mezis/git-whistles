@@ -80,6 +80,7 @@ if branch =~ /(\d+)$/
       Please set it with:
       $ git config pivotal-tracker.token <token>
     }
+    exit 1
   else
     $stdout.write Term::ANSIColor.green "Finding your project and story "
     $stdout.flush
