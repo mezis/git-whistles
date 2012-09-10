@@ -99,7 +99,7 @@ if branch =~ /(\d+)$/
       $stdout.puts Term::ANSIColor.green "Found story #{story_id} in '#{project.name}'"
 
       headline = "Pivotal tracker story [##{story_id}](#{story.url}) in project *#{project.name}*:"
-      description = story.description.split("\n").map { |line| "> #{line}" }
+      description = story.description.split("\n").map { |line| "> #{line}" }.join("\n")
       body = "#{headline}\n\n#{description}"
       title = "#{project.name}: #{story.name} [##{story.id}]"
 
