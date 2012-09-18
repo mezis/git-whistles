@@ -3,9 +3,7 @@ version control system.
 
 Install with:
 
-    git clone git://github.com/mezis/git-whistles.git <clone-dir>
-
-Add `<clone-dir>/bin` to your `$PATH`
+    gem install git-whistles
 
 
 #### chop
