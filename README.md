@@ -5,6 +5,8 @@ Install with:
 
     gem install git-whistles
 
+*Note*: if you installed a previous version of this by cloning the repository, you'll have to remove that clone from your `PATH`.
+Otherwise strange load issues may happen.
 
 #### chop
 
