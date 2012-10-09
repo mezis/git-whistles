@@ -11,6 +11,6 @@ require 'rubygems'
 require 'git-whistles'
 
 target_script = Pathname.new($0).basename
-script_path = Git::Whistles::GEMDIR.join('libexec', "#{target_script}.sh").cleanpath
+script_path = Git::Whistles::GEMDIR.join('libexec', "#{target_script}.sh").cleanpath.to_s
 
 Kernel.exec script_path, *ARGV
