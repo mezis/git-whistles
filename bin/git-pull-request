@@ -111,4 +111,9 @@ end
 query_string = query.map { |key,value| "#{CGI.escape key.to_s}=#{CGI.escape value}"}.join('&')
 url = "https://github.com/#{repo}/pull/new?#{query_string}"
 puts "Preparing a pull request for branch #{branch}"
-system "open", url
+
+unless `which xdg-open`.strip.empty?
+  system "xdg-open", url
+else
+  system "open", url
+end
