@@ -112,6 +112,7 @@ query_string = query.map { |key,value| "#{CGI.escape key.to_s}=#{CGI.escape valu
 url = "https://github.com/#{repo}/pull/new?#{query_string}"
 puts "Preparing a pull request for branch #{branch}"
 
+# Use +xdg-open+ on Linux, +open+ on Darwin
 unless `which xdg-open`.strip.empty?
   system "xdg-open", url
 else
