@@ -17,6 +17,7 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "bundler", ">= 1.0.0"
   gem.add_development_dependency "rake"
   gem.add_development_dependency "pry"
+  gem.add_development_dependency "pry-nav"
 
   gem.add_dependency "pivotal-tracker", "~> 0.5.6"
   gem.add_dependency "term-ansicolor"

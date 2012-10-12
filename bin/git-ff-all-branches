@@ -1,0 +1,190 @@
+#!/usr/bin/env ruby
+# 
+# Fast-forward all local branches to their remote counterparts.
+# 
+# Inspired from http://stackoverflow.com/questions/5147537/how-do-i-fast-forward-other-tracking-branches-in-git
+# 
+require 'ostruct'
+require 'optparse'
+require 'logger'
+require 'term/ansicolor'
+
+############################################################################
+
+
+class App
+
+  DEFAULTS = {
+    :fetch    => false,
+    :dry_run  => false,
+    :remote   => 'origin',
+    :loglevel => Logger::WARN
+  }
+
+  class Logger < ::Logger
+    Colors = {
+      'DEBUG'   => :reset,
+      'INFO'    => :green,
+      'WARN'    => :yellow,
+      'ERROR'   => :red,
+      'FATAL'   => :red,
+      'UNKNOWN' => :red
+    }
+    
+    def initialize(*args)
+      super
+      self.formatter = self.method(:custom_formatter)
+    end
+
+    def custom_formatter(severity, time, progname, msg)
+      Term::ANSIColor.send(Colors[severity], "#{msg}\n")
+    end
+  end
+
+
+  def initialize
+    @options = OpenStruct.new(DEFAULTS)
+    @local_branches  = {}
+    @remote_branches = {}
+    @current_branch  = nil
+    @log = Logger.new($stderr)
+  end
+
+
+  def main(args)
+    parse_args!(args)
+    log.level = options.loglevel
+
+    if options.fetch
+      run "git fetch"
+    end
+
+    load_refs
+    local_branches.each_pair do |branch_name, _|
+      process_branch(branch_name)
+    end
+  end
+
+
+
+  private
+
+  attr :options
+  attr :local_branches
+  attr :remote_branches
+  attr :current_branch
+  attr :log
+
+
+  def process_branch(branch_name)
+    unless remote_branches[branch_name]
+      log.debug("skipping #{branch_name} (not on remote)")
+      return
+    end
+
+    old_head = local_branches[branch_name]
+    new_head = remote_branches[branch_name]
+    if old_head == new_head
+      log.debug("skipping #{branch_name} (up-to-date)")
+      return
+    end
+
+    if branch_name == current_branch
+      if run('git status --porcelain').strip.empty?
+        flag = (options.loglevel > Logger::INFO) ? '-q' : ''
+        run("git merge --ff-only #{flag} #{new_head}") unless options.dry_run
+      else
+        log.warn('not merging current branch as it has local changes')
+        return
+      end
+    else
+      merge_base = run("git merge-base #{old_head} #{new_head}").strip
+      if merge_base != old_head
+        log.warn("cannot fast-forward #{branch_name}")
+        return
+      end
+      run("git update-ref refs/heads/#{branch_name} #{new_head} #{old_head}")
+    end
+
+    log.info("#{branch_name}: #{short_sha old_head} -> #{short_sha new_head}")
+  end
+
+
+  def option_parser
+    @option_parser ||= OptionParser.new do |op|
+      op.banner = "Usage: git ff-all-branches [options]"
+
+      op.on("-v", "--verbose", "Run verbosely (add twice for more verbosity)") do |v|
+        options.loglevel -= 1
+      end
+
+      op.on("-q", "--quiet", "Run silently") do |v|
+        options.loglevel = Logger::UNKNOWN
+      end
+
+      op.on("-r", "--remote REMOTE", "Set the remote [origin]") do |remote|
+        options.remote = remote
+      end
+
+      op.on("-f", "--fetch", "Run git fetch beforehand") do |v|
+        options.fetch = v
+      end
+
+      op.on("-p", "--dry-run", "Don't actually do anything") do |v|
+        options.dry_run = v
+      end
+    end
+  end
+
+
+  def parse_args!(args)
+    begin
+      option_parser.parse!(args)
+    rescue OptionParser::InvalidOption => error
+      die error.message, :usage => true
+    end
+
+    if ARGV.any?
+      die "this command does not take any argument besides flags", :usage => true
+    end
+  end
+
+
+  def run(command)
+    result = %x(#{command})
+    return result if $? == 0
+    die "command '#{command}' failed"
+  end
+
+
+  def die(message, options = {})
+    puts Term::ANSIColor.red(message)
+    if options[:usage]
+      puts 
+      puts option_parser.help
+    end
+    exit 1
+  end
+
+
+  def load_refs
+    @current_branch = run("git symbolic-ref HEAD").strip.gsub(%r(^refs/heads/), '')
+
+    run('git show-ref').strip.split(/\n+/).each do |line|
+      line =~ %r(([a-f0-9]{40}) refs/(remotes/#{options.remote}|heads)/(.*)) or next
+      if $2 == 'heads'
+        @local_branches[$3] = $1
+      else
+        @remote_branches[$3] = $1
+      end
+    end
+  end
+
+  def short_sha(sha)
+    sha[0..7]
+  end
+end
+
+############################################################################
+
+App.new.main(ARGV)
