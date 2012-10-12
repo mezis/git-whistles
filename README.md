@@ -8,20 +8,18 @@ Install with:
 *Note*: if you installed a previous version of this by cloning the repository, you'll have to remove that clone from your `PATH`.
 Otherwise strange load issues may happen.
 
-#### chop
+Use it with:
 
-`git chop [branch]`
+- `git ff-all-branches [-f] [-p] [-v]`. Fast-forward all local tracking branches to their remote counterpart (where possible). Very useful on big projects.
+- `git stash-and-checkout [branch]` As the name implies: stash and checkout another branch.
+- `git-pull-request [your-branch] [target-branch]` Open your browser at a Github pull-request page for the specified branch (defaults to the current `head`). If you're using Pivotal Tracker and your branch has a story number in its name, populates your pull request with story details.
+- `git outstanding-features [from-branch] [to-branch]` List the pull requests merged in `[to-branch]` but not in `[from-branch]`. Useful to prepare a list of stuff you're oging to deploy. Defaults to listing what's on `origin/master` but not on `origin/production`.
+- `git chop [branch]` Delete the local and origin copy of a branch. Useful to close feature branches once a feature is completed.
+- `git list-branches [-l] [-r] [-i integration-branch]` Colourful listing of all local or origin branches, and their distance to an integration branch (`master` by default).
+- `git merge-po <ancestor> <left> <right>` Merge engine for GetText PO files.
 
-Delete the local and origin copy of a branch.
-Useful to close feature branches once a feature is completed.
+### More details on some of the commands
 
-#### list-branches
- 
-
-`git list-branches [-l] [-r] [-i integration-branch]`
-
-Colourful listing of all local or origin branches, and their distance to an
-integration branch (`master` by default).
 
 #### merge-po
 
@@ -45,14 +43,6 @@ Add this to .gitattributes:
     *.pot  merge=pofile
 
 
-#### pull-request
-
-`git-pull-request [branch]`
-
-Open your browser at a Github pull-request page for the specified branch
-(defaults to the current `head`).
-
-
 #### stash-and-checkout
 
 `git stash-and-checkout [branch]`
@@ -65,9 +55,3 @@ This lets you keep work in progress on multiple branches without committing it.
 
 I tend to alias this to `git co`.
 
-
-#### outstanding-features
-
-`git checkout production ; git outstanding-features`
-
-Lists the merge pull-requests that are on `production` but not (yet) on `origin/production`.
