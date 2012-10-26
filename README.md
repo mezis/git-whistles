@@ -17,6 +17,7 @@ Use it with:
 - `git chop [branch]` Delete the local and origin copy of a branch. Useful to close feature branches once a feature is completed.
 - `git list-branches [-l] [-r] [-i integration-branch]` Colourful listing of all local or origin branches, and their distance to an integration branch (`master` by default).
 - `git merge-po <ancestor> <left> <right>` Merge engine for GetText PO files.
+- `git select <story-id>` Checkout a local branch with the matching number. If not found, lists remote branches
 
 ### More details on some of the commands
 
