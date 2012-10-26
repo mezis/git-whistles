@@ -6,53 +6,25 @@
 # 
 require 'ostruct'
 require 'optparse'
-require 'logger'
 require 'term/ansicolor'
+require 'git-whistles/logger'
+require 'git-whistles/app'
 
 ############################################################################
 
 
-class App
-
-  DEFAULTS = {
-    :fetch    => false,
-    :dry_run  => false,
-    :remote   => 'origin',
-    :loglevel => Logger::WARN
-  }
-
-  class Logger < ::Logger
-    Colors = {
-      'DEBUG'   => :reset,
-      'INFO'    => :green,
-      'WARN'    => :yellow,
-      'ERROR'   => :red,
-      'FATAL'   => :red,
-      'UNKNOWN' => :red
-    }
-    
-    def initialize(*args)
-      super
-      self.formatter = self.method(:custom_formatter)
-    end
-
-    def custom_formatter(severity, time, progname, msg)
-      Term::ANSIColor.send(Colors[severity], "#{msg}\n")
-    end
-  end
-
+class App < Git::Whistles::App
 
   def initialize
-    @options = OpenStruct.new(DEFAULTS)
+    super
     @local_branches  = {}
     @remote_branches = {}
     @current_branch  = nil
-    @log = Logger.new($stderr)
   end
 
 
   def main(args)
-    parse_args!(args)
+    super
     log.level = options.loglevel
 
     if options.fetch
@@ -69,11 +41,19 @@ class App
 
   private
 
-  attr :options
+  def defaults
+    {
+      :fetch    => false,
+      :dry_run  => false,
+      :remote   => 'origin',
+      :loglevel => Logger::WARN
+    }
+  end
+
+
   attr :local_branches
   attr :remote_branches
   attr :current_branch
-  attr :log
 
 
   def process_branch(branch_name)
@@ -90,20 +70,20 @@ class App
     end
 
     if branch_name == current_branch
-      if run('git status --porcelain').strip.empty?
+      if run!('git status --porcelain').strip.empty?
         flag = (options.loglevel > Logger::INFO) ? '-q' : ''
-        run("git merge --ff-only #{flag} #{new_head}") unless options.dry_run
+        run!("git merge --ff-only #{flag} #{new_head}") unless options.dry_run
       else
         log.warn('not merging current branch as it has local changes')
         return
       end
     else
-      merge_base = run("git merge-base #{old_head} #{new_head}").strip
+      merge_base = run!("git merge-base #{old_head} #{new_head}").strip
       if merge_base != old_head
         log.warn("cannot fast-forward #{branch_name}")
         return
       end
-      run("git update-ref refs/heads/#{branch_name} #{new_head} #{old_head}")
+      run!("git update-ref refs/heads/#{branch_name} #{new_head} #{old_head}")
     end
 
     log.info("#{branch_name}: #{short_sha old_head} -> #{short_sha new_head}")
@@ -138,39 +118,18 @@ class App
 
 
   def parse_args!(args)
-    begin
-      option_parser.parse!(args)
-    rescue OptionParser::InvalidOption => error
-      die error.message, :usage => true
-    end
+    super
 
-    if ARGV.any?
+    if args.any?
       die "this command does not take any argument besides flags", :usage => true
     end
   end
 
 
-  def run(command)
-    result = %x(#{command})
-    return result if $? == 0
-    die "command '#{command}' failed"
-  end
-
-
-  def die(message, options = {})
-    puts Term::ANSIColor.red(message)
-    if options[:usage]
-      puts 
-      puts option_parser.help
-    end
-    exit 1
-  end
-
-
   def load_refs
-    @current_branch = run("git symbolic-ref HEAD").strip.gsub(%r(^refs/heads/), '')
+    @current_branch = run!("git symbolic-ref HEAD").strip.gsub(%r(^refs/heads/), '')
 
-    run('git show-ref').strip.split(/\n+/).each do |line|
+    run!('git show-ref').strip.split(/\n+/).each do |line|
       line =~ %r(([a-f0-9]{40}) refs/(remotes/#{options.remote}|heads)/(.*)) or next
       if $2 == 'heads'
         @local_branches[$3] = $1
@@ -187,4 +146,4 @@ end
 
 ############################################################################
 
-App.new.main(ARGV)
+App.run!

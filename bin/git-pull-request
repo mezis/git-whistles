@@ -7,114 +7,178 @@
 #   Assumes the branches are named
 #   <team>/<branch-title>-<story-id>
 # 
-# Copyright (C) 2012 Julien Letessier
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy of
-# this software and associated documentation files (the "Software"), to deal in
-# the Software without restriction, including without limitation the rights to
-# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-# of the Software, and to permit persons to whom the Software is furnished to do
-# so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-#
-# require 'CGI'
 require 'rubygems'
 require 'pivotal-tracker'
+require 'optparse'
+require 'cgi'
 require 'term/ansicolor'
+require 'git-whistles/app'
 
-origin_url = `git config --get remote.origin.url`.strip
-unless origin_url =~ /github\.com/
-  puts "origin does not have a Github URL !"
-  exit 1
-end
 
-repo = origin_url.sub(/.*github\.com[\/:]/,'').sub(/\.git$/,'')
+class App < Git::Whistles::App
 
-if ARGV[0]
-  branch = ARGV[0]
-else
-  branch = `git symbolic-ref HEAD`.gsub(%r(^refs/heads/), "")
-  exit $? unless $? == 0
-end
+  # Browsers = %w(xdg-open open firefox iceweasel)
+  Browsers = %w(foo)
 
-if branch == 'master'
-  puts "You cannot issue a pull request for master !"
-  exit 1
-end
+  def initialize
+    super
+  end
 
-against = ARGV[1] || 'master'
 
-# build the base query
-query = {
-  :base_repo => repo,
-  :base_ref  => against,
-  :head_ref  => branch
-}
+  def main(args)
+    super
+    parse_args!(args)
 
-# guess team name
-if branch =~ %r{^(\w+)/.*}
-  team = $1.capitalize
-end
+    if args.count > 0
+      die "Too many arguments", :usage => true
+    end
 
-# guess title.
-title = branch.split('/').last.split(/[_-]/).delete_if { |word| word =~ /^\d+$/ }.join(' ').capitalize
-query[:title] = "#{team}: #{title}"
+    if options.from == options.to
+      die "You cannot issue a pull request to the same branch (#{options.from})."
+    end
 
-# find the PT story, or fall back to the branch-name-based titling
-if branch =~ /(\d+)$/
-  story_id = $1.to_i
-  token = `git config pivotal-tracker.token`.strip
-  if token.empty?
-    puts Term::ANSIColor.yellow %Q{
-      I don't know your Pivotal Tracker token!
-      Please set it with:
-      $ git config pivotal-tracker.token <token>
+    # build the base query
+    query = {
+      :base_repo => repo,
+      :base_ref  => options.to,
+      :head_ref  => options.from
     }
-    exit 1
-  else
-    $stdout.write Term::ANSIColor.green "Finding your project and story "
-    $stdout.flush
+
+    # guess team name
+    if options.from =~ %r{^(\w+)/.*}
+      team = $1.capitalize
+    else
+      team = nil
+    end
+
+    # guess title.
+    title = options.from.split('/').last.split(/[_-]/).delete_if { |word| word =~ /^\d+$/ }.join(' ').capitalize
+    query[:title] = team ? "#{team}: #{title}" : title
+
+    # add Pivotal infos
+    add_pivotal_info(query, $1.to_i) if options.from =~ /(\d+)$/
+
+    query_string = query.map { |key,value|
+      "#{CGI.escape key.to_s}=#{CGI.escape value}"
+    }.join('&')
+    url = "https://github.com/#{repo}/pull/new?#{query_string}"
+    puts "Preparing a pull request for branch #{options.from}"
+    
+    unless launch_browser(url)
+      log.warn "Sorry, I don't know how to launch a web browser on your system. You can open it yourself and paste this URL:\n#{url}"
+    end
+  end
+
+
+  private
+
+
+  def defaults
+    {
+      :from   => run!('git symbolic-ref HEAD').strip.gsub(%r(^refs/heads/), ""),
+      :to     => 'master',
+      :remote => 'origin'
+    }
+  end
+
+  def option_parser
+    @option_parser ||= OptionParser.new do |op|
+      op.banner = "Usage: git pull-request [options]"
+
+      op.on("-f", "--from YOUR_BRANCH", "Branch to issue pull request for [head]") do |v|
+        options.from = v
+      end
+
+      op.on("-to", "--to UPSTREAM_BRANCH", "Branch into which you want your code merged [master]") do |v|
+        options.to = v
+      end
+
+      op.on("-r", "--remote NAME", "The remote you're sending this to [origin]") do |v|
+        options.to = v
+      end
+    end
+  end
+
+
+  def origin_url
+    @origin_url ||= begin
+      run!("git config --get remote.#{options.remote}.url").strip.tap do |url|
+        url =~ /github\.com/ or die "origin does not have a Github URL !"
+      end
+    end
+  end    
+
+
+  def repo
+    @repo ||= origin_url.sub(/.*github\.com[\/:]/,'').sub(/\.git$/,'')
+  end
+
+
+  def add_pivotal_info(query, story_id)
+    token = `git config pivotal-tracker.token`.strip
+    if token.empty?
+      puts Term::ANSIColor.yellow %Q{
+        Your branch appears to have a story ID,
+        but I don't know your Pivotal Tracker token!
+        Please set it with:
+        $ git config [--global] pivotal-tracker.token <token>
+      }
+      die "Aborting."
+    end
+
+    log.info "Finding your project and story ", :no_newline => true 
 
     PivotalTracker::Client.token = token
     story, project = PivotalTracker::Project.all.find do |project|
-      $stdout.write Term::ANSIColor.green '.'
-      $stdout.flush
+      log.info '.', :no_newline => true
       story = project.stories.find(story_id) and break story, project
     end
     $stdout.puts
 
     if story.nil?
-      puts Term::ANSIColor.yellow "Apologies... I could not find story #{story_id}."
-    else
-      $stdout.puts Term::ANSIColor.green "Found story #{story_id} in '#{project.name}'"
-
-      headline = "Pivotal tracker story [##{story_id}](#{story.url}) in project *#{project.name}*:"
-      description = story.description.split("\n").map { |line| "> #{line}" }.join("\n")
-      body = "#{headline}\n\n#{description}"
-      title = "#{project.name}: #{story.name} [##{story.id}]"
-
-      query.merge! :subject => story.name, :body => body, :title => title
+      log.warn "Apologies... I could not find story #{story_id}."
+      return
     end
+
+    log.info "Found story #{story_id} in '#{project.name}'"
+
+    headline = "Pivotal tracker story [##{story_id}](#{story.url}) in project *#{project.name}*:"
+    description = story.description.split("\n").map { |line| "> #{line}" }.join("\n")
+    body = "#{headline}\n\n#{description}"
+    title = "#{project.name}: #{story.name} [##{story.id}]"
+    query.merge! :subject => story.name, :body => body, :title => title
+    return
   end
+
+  def launch_browser(url)
+    Browsers.each do |command|
+      next if run("which #{command}").strip.empty?
+      system command, url
+      return true
+    end
+    return false
+  end
+
+
 end
 
-query_string = query.map { |key,value| "#{CGI.escape key.to_s}=#{CGI.escape value}"}.join('&')
-url = "https://github.com/#{repo}/pull/new?#{query_string}"
-puts "Preparing a pull request for branch #{branch}"
+############################################################################
+
+App.run!
+
+
+
+# find the PT story, or fall back to the branch-name-based titling
+# if branch =~ /(\d+)$/
+#   story_id = $1.to_i
+# 
+# query_string = query.map { |key,value| "#{CGI.escape key.to_s}=#{CGI.escape value}"}.join('&')
+# url = "https://github.com/#{repo}/pull/new?#{query_string}"
+# puts "Preparing a pull request for branch #{branch}"
 
 # Use +xdg-open+ on Linux, +open+ on Darwin
-unless `which xdg-open`.strip.empty?
-  system "xdg-open", url
-else
-  system "open", url
-end
+# unless `which xdg-open`.strip.empty?
+#   system "xdg-open", url
+# else
+#   system "open", url
+# end
