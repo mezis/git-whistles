@@ -1,4 +1,5 @@
 require 'logger'
+require 'git-whistles'
 
 module Git::Whistles
   class Logger < ::Logger
@@ -17,7 +18,8 @@ module Git::Whistles
     end
 
     def custom_formatter(severity, time, progname, msg)
-      Term::ANSIColor.send(Colors[severity], "#{msg}\n")
+      msg = msg.sub(/([^¬])$/,"\\1\n").sub(/¬$/,'')
+      Term::ANSIColor.send(Colors[severity], msg)
     end
   end
 end
