@@ -17,8 +17,7 @@ require 'git-whistles/app'
 
 class App < Git::Whistles::App
 
-  # Browsers = %w(xdg-open open firefox iceweasel)
-  Browsers = %w(foo)
+  Browsers = %w(xdg-open open firefox iceweasel)
 
   def initialize
     super
@@ -126,14 +125,14 @@ class App < Git::Whistles::App
       die "Aborting."
     end
 
-    log.info "Finding your project and story ", :no_newline => true 
+    log.info "Finding your project and story¬"
 
     PivotalTracker::Client.token = token
     story, project = PivotalTracker::Project.all.find do |project|
-      log.info '.', :no_newline => true
+      log.info '.¬'
       story = project.stories.find(story_id) and break story, project
     end
-    $stdout.puts
+    log.info '.'
 
     if story.nil?
       log.warn "Apologies... I could not find story #{story_id}."
@@ -165,20 +164,3 @@ end
 ############################################################################
 
 App.run!
-
-
-
-# find the PT story, or fall back to the branch-name-based titling
-# if branch =~ /(\d+)$/
-#   story_id = $1.to_i
-# 
-# query_string = query.map { |key,value| "#{CGI.escape key.to_s}=#{CGI.escape value}"}.join('&')
-# url = "https://github.com/#{repo}/pull/new?#{query_string}"
-# puts "Preparing a pull request for branch #{branch}"
-
-# Use +xdg-open+ on Linux, +open+ on Darwin
-# unless `which xdg-open`.strip.empty?
-#   system "xdg-open", url
-# else
-#   system "open", url
-# end
