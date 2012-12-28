@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 require "git-whistles/version"
 
 module Git
