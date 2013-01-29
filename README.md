@@ -13,7 +13,7 @@ Use it with:
 - `git ff-all-branches [-f] [-p] [-v]`. Fast-forward all local tracking branches to their remote counterpart (where possible). Very useful on big projects.
 - `git stash-and-checkout [branch]` As the name implies: stash and checkout another branch.
 - `git-pull-request [--from your-branch] [--to target-branch]` Open your browser at a Github pull-request page for the specified branch (defaults to the current `head`). If you're using Pivotal Tracker and your branch has a story number in its name, populates your pull request with story details.
-- `git outstanding-features [from-branch] [to-branch]` List the pull requests merged in `[to-branch]` but not in `[from-branch]`. Useful to prepare a list of stuff you're oging to deploy. Defaults to listing what's on `origin/master` but not on `origin/production`.
+- `git outstanding-features [from-branch] [to-branch]` List the pull requests merged in `[to-branch]` but not in `[from-branch]`. Useful to prepare a list of stuff you're goFixing to deploy. Defaults to listing what's on `origin/master` but not on `origin/production`.
 - `git chop [branch]` Delete the local and origin copy of a branch. Useful to close feature branches once a feature is completed.
 - `git list-branches [-l] [-r] [-i integration-branch]` Colourful listing of all local or origin branches, and their distance to an integration branch (`master` by default).
 - `git merge-po <ancestor> <left> <right>` Merge engine for GetText PO files.
