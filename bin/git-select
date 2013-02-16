@@ -7,69 +7,119 @@
 #   the story-id and checkout it
 #
 require 'rubygems'
+require 'optparse'
 require 'term/ansicolor'
+require 'git-whistles/app'
 
-# Helper functions
-def git_dir?
-  `git config --get remote.origin.url`.strip == ''
-end
+class App < Git::Whistles::App
 
-def process(branches)
-  branches.split("\n").map { |branch| branch.strip.gsub(%r(\* ), '')}
-end
-
-def select(branches, story_id)
-  branches.select { |branch| branch =~ /#{story_id}/ }
-end
-
-
-if git_dir?
-  puts "Not a valid git repo"
-  exit 1
-end
-
-if ARGV[0] && ARGV[0] =~ /^\d+$/
-  story_id = ARGV[0]
-else
-  puts "story-id is not a number"
-  exit 1
-end
-
-
-# Find locally first
-locals = process(`git branch`)
-
-# Select matching locals
-found  = select(locals, story_id)
-
-case found.size
-when 0
-  puts Term::ANSIColor.yellow 'Failed lookup on local branches'
-when 1
-  `git checkout #{found.first}`
-  exit 0
-else
-  puts "Found #{found.size} matches on locals:"
-  found.each do |branch|
-    puts "  #{branch}"
+  def initialize
+    super
   end
-  exit 1
-end
 
-# Find remote branch
-remotes = process(`git branch -a`)
+  def main(args)
+    super
+    parse_args!(args)
 
-# Select matching remotes
-found   = select(remotes, story_id)
+    die "Missing story id", :usage => true     if args.count == 0
+    die "Too many arguments", :usage => true   if args.count > 1
 
-case found.size
-when 0
-  puts Term::ANSIColor.yellow 'Failed lookup on remote branches'
-else
-  puts "Found #{found.size} matches on remotes:"
-  found.each do |branch|
-    puts "  #{branch.gsub(%r(^remotes/origin/), "")}"
+    story_id = args.first
+
+    unless story_id.match(/^\d+$/)
+      die "Story ID is not a number", :usage => true 
+    end
+
+    # Find locally first
+    locals = process(`git branch`)
+
+    # Select matching locals
+    found  = select(locals, story_id)
+
+    case found.size
+    when 0
+      puts yellow 'failed lookup on local branches'
+      puts ""
+    when 1
+      `git checkout #{found.first}`
+      exit 0
+    else
+      puts "found #{found.size} matches on locals:"
+      found.each do |branch|
+        puts green("  #{branch}")
+      end
+      exit 1
+    end
+
+    # Find remote branch
+    remotes = process(`git branch -a`)
+
+    # Select matching remotes
+    found   = select(remotes, story_id)
+
+    case found.size
+    when 0
+      puts yellow 'failed lookup on remote branches'
+    when 1
+      if options.remote_checkout
+        `git checkout #{branch_name(found.first)}`
+        exit 0
+      else
+        puts "found #{green(branch_name(found.first))} on remote"
+        puts "by default remote branches are not checked out" 
+        puts "if you want to checkout do: #{green "git select -r #{story_id}"}"
+        exit 1
+      end
+    else
+      puts "Found #{found.size} matches on remotes:"
+      found.each do |branch|
+        puts green("  #{branch_name(branch)}")
+      end
+      exit 1
+    end
+
   end
-  exit 1
+
+  def defaults
+    {
+      :remote_checkout => false
+    }
+  end
+
+  def option_parser
+    @option_parser ||= OptionParser.new do |op|
+      op.banner = "Usage: git select [options] STORY_ID"
+
+      op.on("-r", "--remote", "Checkout branch from remote if not present locally") do |v|
+        options.remote_checkout = true
+      end
+
+      op.on_tail("-h", "--help", "Show this message") do
+        puts op
+        exit
+      end
+    end
+  end
+
+  def process(branches)
+    branches.split("\n").map { |branch| branch.strip.gsub(%r(\* ), '')}
+  end
+
+  def select(branches, story_id)
+    branches.select { |branch| branch =~ /#{story_id}/ }
+  end
+  
+  def branch_name(branch_ref)
+    branch_ref.gsub(%r(^remotes/origin/), "")
+  end
+
+  def green(text)
+    Term::ANSIColor.green(text)
+  end
+
+  def yellow(text)
+    Term::ANSIColor.yellow(text)
+  end
 end
 
+App.run!
