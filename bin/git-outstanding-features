@@ -1,1 +1,53 @@
-../libexec/runner.rb
+#!/usr/bin/env ruby
+# encoding: UTF-8
+#
+# git-outstanding-features --
+#
+# List merged pull requests.
+#
+require 'rubygems'
+require 'optparse'
+require 'term/ansicolor'
+require 'git-whistles/app'
+
+class App < Git::Whistles::App
+
+  def initialize
+    super
+  end
+
+  def main(args)
+    super
+    parse_args!(args)
+
+    `git log --oneline #{options.to} ^#{options.from} | grep 'Merge pull request' | sed  -e 's:.*from [^/]*/::'`
+  end
+
+  def defaults
+    {
+      :from => 'origin/master',
+      :to   => 'origin/production'
+    }
+  end
+
+  def option_parser
+    @option_parser ||= OptionParser.new do |op|
+      op.banner = "Usage: git outstanding-features --from [FROM-BRANCH] --to [TO-BRANCH]"
+
+      op.on("-f", "--from [BRANCH]", "From branch") do |from|
+        options.from = from
+      end
+
+      op.on("-t", "--to [BRANCH]", "To branch") do |to|
+        options.to = to
+      end
+
+      op.on_tail("-h", "--help", "Show this message") do
+        puts op
+        exit
+      end
+    end
+  end
+end
+
+App.run!
