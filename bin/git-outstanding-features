@@ -20,7 +20,7 @@ class App < Git::Whistles::App
     super
     parse_args!(args)
 
-    `git log --oneline #{options.to} ^#{options.from} | grep 'Merge pull request' | sed  -e 's:.*from [^/]*/::'`
+    `git log --oneline #{options.from} ^#{options.to} | grep 'Merge pull request' | sed  -e 's:.*from [^/]*/::'`
   end
 
   def defaults
