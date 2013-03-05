@@ -1,0 +1,67 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+#
+# git-latest --
+#
+# List of latest pushed branches on origin
+#
+require 'rubygems'
+require 'optparse'
+require 'term/ansicolor'
+require 'git-whistles/app'
+
+class App < Git::Whistles::App
+
+  def initialize
+    super
+  end
+
+  def main(args)
+    super
+    parse_args!(args)
+
+    results = `git for-each-ref --sort=-committerdate --count=#{options.results} refs/remotes/origin/#{options.pattern} --format='[%(committerdate:relative)] (%(authorname)) %(refname)'`
+    results = results.split("\n")
+
+    if results.any?
+      puts "Latest #{ [results.length, options.results].min } pushed branches:"
+
+      results.each do |branch|
+        puts branch.gsub('refs/remotes/origin/', '')
+      end
+    else
+      puts "no results..."
+    end
+  end
+
+  def defaults
+    {
+      :results => 20,
+      :pattern => ''
+    }
+  end
+
+  def option_parser
+    @option_parser ||= OptionParser.new do |op|
+      op.banner = %Q{
+Returns the list of latest pushed branches on origin
+Usage: git latest [-n NR_RESULTS] [-p PATTERN]
+      }
+
+      op.on("-n", "--n [NR_RESULTS]", "Number of results to display, defaults to 20") do |n|
+        options.nr_results = n
+      end
+
+      op.on("-p", "--p [PATTERN]", "Pattern to lookup. Eg. -p my-team-name") do |pattern|
+        options.pattern = pattern
+      end
+
+      op.on_tail("-h", "--help", "Show this message") do
+        puts op
+        exit
+      end
+    end
+  end
+end
+
+App.run!
