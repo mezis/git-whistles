@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 #
-# git-latest --
+# git-latest-pushes --
 #
 # List of latest pushed branches on origin
 #
@@ -45,7 +45,7 @@ class App < Git::Whistles::App
     @option_parser ||= OptionParser.new do |op|
       op.banner = %Q{
 Returns the list of latest pushed branches on origin
-Usage: git latest [-n NR_RESULTS] [-p PATTERN]
+Usage: git latest-pushes [-n NR_RESULTS] [-p PATTERN]
       }
 
       op.on("-n", "--n [NR_RESULTS]", "Number of results to display, defaults to 20") do |n|
