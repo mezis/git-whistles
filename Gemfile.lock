@@ -1,19 +1,19 @@
 PATH
   remote: .
   specs:
-    git-whistles (0.7.0)
+    git-whistles (0.7.1)
       pivotal-tracker (~> 0.5.6)
       term-ansicolor
 
 GEM
   remote: https://rubygems.org/
   specs:
-    builder (3.1.4)
+    builder (3.2.0)
     coderay (1.0.7)
     crack (0.3.2)
     happymapper (0.4.0)
       libxml-ruby (~> 2.0)
-    libxml-ruby (2.5.0)
+    libxml-ruby (2.6.0)
     method_source (0.8)
     mime-types (1.21)
     nokogiri (1.5.6)
@@ -39,7 +39,7 @@ GEM
     rest-client (1.6.7)
       mime-types (>= 1.16)
     slop (3.3.2)
-    term-ansicolor (1.0.7)
+    term-ansicolor (1.1.1)
 
 PLATFORMS
   ruby
