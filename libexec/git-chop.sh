@@ -20,5 +20,5 @@ if [ "$branch" = "$current_branch" ] ; then
   git checkout master || die
 fi
 
-git branch -d "$branch" || die
+git branch -D "$branch" || die
 git push origin ":$branch" || die
