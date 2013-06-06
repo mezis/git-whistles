@@ -146,7 +146,7 @@ class App < Git::Whistles::App
     description = story.description.split("\n").map { |line| "> #{line}" }.join("\n")
     body = "#{headline}\n\n#{description}"
     title = "#{project.name}: #{story.name} [##{story.id}]"
-    query.merge! :subject => story.name, :body => body, :title => title
+    query.merge! :subject => story.name, :"pull_request[body]" => body, :"pull_request[title]" => title
     return
   end
 
