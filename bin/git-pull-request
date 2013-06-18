@@ -37,12 +37,7 @@ class App < Git::Whistles::App
       die "You cannot issue a pull request to the same branch (#{options.from})."
     end
 
-    # build the base query
-    query = {
-      :base_repo => repo,
-      :base_ref  => options.to,
-      :head_ref  => options.from
-    }
+    query = { }
 
     # guess team name
     if options.from =~ %r{^(\w+)/.*}
@@ -53,7 +48,7 @@ class App < Git::Whistles::App
 
     # guess title.
     title = options.from.split('/').last.split(/[_-]/).delete_if { |word| word =~ /^\d+$/ }.join(' ').capitalize
-    query[:title] = team ? "#{team}: #{title}" : title
+    query[:"pull_request[title]"] = team ? "#{team}: #{title}" : title
 
     # add Pivotal infos
     add_pivotal_info(query, $1.to_i) if options.from =~ /(\d+)$/
@@ -61,7 +56,7 @@ class App < Git::Whistles::App
     query_string = query.map { |key,value|
       "#{CGI.escape key.to_s}=#{CGI.escape value}"
     }.join('&')
-    url = "https://github.com/#{repo}/pull/new?#{query_string}"
+    url = "https://github.com/#{repo}/compare/#{options.to}...#{options.from}?#{query_string}"
     puts "Preparing a pull request for branch #{options.from}"
     
     unless launch_browser(url)
