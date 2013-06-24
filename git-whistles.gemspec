@@ -2,7 +2,7 @@
 require File.expand_path('../lib/git-whistles/version', __FILE__)
 
 Gem::Specification.new do |gem|
-  gem.authors       = ["Julien Letessier"]
+  gem.authors       = ["Julien Letessier", "Pedro Cunha"]
   gem.email         = ["julien.letessier@gmail.com"]
   gem.description   = %q{A few helpers for classic Git workflows}
   gem.summary       = %q{
