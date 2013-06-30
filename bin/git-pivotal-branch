@@ -1,0 +1,122 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+#
+# git-pivotal-branch
+# 
+#   Suggest a branch name from the given Pivotal Tracker story ID
+# 
+#   Assumes the branches are named as:
+#   <team>/<branch-title>-<story-id>
+# 
+require 'rubygems'
+require 'optparse'
+require 'pivotal-tracker'
+require 'readline'
+require 'term/ansicolor'
+require 'git-whistles/app'
+
+
+class App < Git::Whistles::App
+
+  def initialize
+    super
+  end
+
+  def main(args)
+    super
+    parse_args!(args)
+
+    if args.count < 1
+      show_and_exit usage
+    end
+
+    story_id = args[0]
+
+    # get PT info
+    story, project = get_pivotal_info(story_id)
+
+    branch_name_suggested = "#{project.name}/#{story.name}-#{story_id}".downcase
+    branch_name_suggested.gsub!(/[^\w\d\/]/, '-').gsub!(/-+/, '-')
+
+    puts 'The suggested branch name is: ' << Term::ANSIColor.yellow(branch_name_suggested)
+    puts '    Press ENTER if you agree'
+    puts ' or Write any other name and press ENTER'
+    puts ' or Press CTRL-D to cancel'
+
+    branch_name = Readline.readline '  > ', false
+
+    if branch_name.nil?
+      log.warn "\nCancelled by user"
+      exit 2
+    end
+
+    branch_name = branch_name.empty? ? branch_name_suggested : branch_name
+
+    # create branch
+    `cd #{ENV['PWD']} && git co -b #{branch_name}`
+
+    # comment and start on PT
+    story.notes.create :text => "Created branch #{branch_name}"
+    story.update :current_state => 'started'
+
+    puts Term::ANSIColor.green('Created branch and started PT story')
+  end
+
+  private
+  
+  def usage
+    'Usage: git pivotal-branch PIVOTAL_TRACKER_STORY_ID'
+  end
+  
+  def show_and_exit(message)
+    puts message
+    exit 1
+  end
+  
+  def option_parser
+    @option_parser ||= OptionParser.new do |op|
+      op.banner = usage
+
+      op.on_tail('-h', '--help', 'Show this message') do
+        show_and_exit op
+      end
+    end
+  end
+
+  def get_pivotal_info(story_id)
+    token = `git config pivotal-tracker.token`.strip
+    if token.empty?
+      puts Term::ANSIColor.yellow %Q{
+        Your branch appears to have a story ID,
+        but I don't know your Pivotal Tracker token!
+        Please set it with:
+        $ git config [--global] pivotal-tracker.token <token>
+      }
+      die "Aborting."
+    end
+
+    log.info "Finding your project and story¬"
+
+    PivotalTracker::Client.token = token
+    story, project = PivotalTracker::Project.all.find do |project|
+      log.info '.¬'
+      story = project.stories.find(story_id) and break story, project
+    end
+    log.info '.'
+
+    if story.nil?
+      log.warn "Apologies... I could not find story #{story_id}."
+      exit 1
+    end
+
+    log.info "Found story #{story_id} in '#{project.name}'"
+
+    [story, project]
+  end
+
+
+end
+
+############################################################################
+
+App.run!
