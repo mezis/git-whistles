@@ -20,13 +20,16 @@ class App < Git::Whistles::App
     super
     parse_args!(args)
 
-    puts `git log --oneline #{options.from} ^#{options.to} | grep 'Merge pull request' | sed  -e 's:.*from [^/]*/::'`
+    output = `git log --oneline #{options.from} ^#{options.to} | grep 'Merge pull request' | sed  -e 's:.*from [^/]*/::'`
+    return output if output.nil?
+    puts options.oneline ? output.gsub(/\s+/, ' ') : output
   end
 
   def defaults
     {
-      :from => 'origin/master',
-      :to   => 'origin/production'
+      :from    => 'origin/master',
+      :to      => 'origin/production',
+      :oneline => false
     }
   end
 
@@ -40,6 +43,10 @@ class App < Git::Whistles::App
 
       op.on("-t", "--to [BRANCH]", "To branch") do |to|
         options.to = to
+      end
+
+      op.on("-o", "--oneline", "Output features in one line separated by spaces") do |oneline|
+        options.oneline = true
       end
 
       op.on_tail("-h", "--help", "Show this message") do
