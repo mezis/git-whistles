@@ -1,2 +1,6 @@
+# 2013-07-18: 0.7.5
+* [FEATURE] git pivotal-branch <story-id> Creates a branch name suggestion from the specified Pivotal Tracker story ID. [dncrht]
+* [FEATURE] git outstanding-features -o allows to view all features to be deployed in one single line
+
 # 2013-06-18: 0.7.4
 * [FIX] Adjusted git-pull-request to play with the new GitHub pull request user interface
