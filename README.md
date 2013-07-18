@@ -19,7 +19,7 @@ Use it with:
 - `git merge-po <ancestor> <left> <right>` Merge engine for GetText PO files.
 - `git select <story-id>` Checkout a local branch with the matching number. If not found, lists remote branches
 - `git latest-pushes [-n NR_RESULTS] [-p PATTERN]` Show latest pushed branches to origin. Defaults to 20 results. Pattern is appended to refs/remotes/origin/ so include the team or project name to filter results. [[PedroCunha](https://github.com/PedroCunha)]
-- `git pivotal-branch <story-id>` Creates a branch name suggestion from the specified Pivotal Tracker story ID. [[dncrht](https://github.com/dncrht)]
+- `git pivotal-branch <story-id>` Creates a branch name suggestion from the specified Pivotal Tracker story ID. It also comments on the story the branch name created and starts the story [[dncrht](https://github.com/dncrht)]
 
 ### More details on some of the commands
 
