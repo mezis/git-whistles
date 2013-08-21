@@ -11,6 +11,7 @@ Gem::Specification.new do |gem|
     slightly simpler.
   }
   gem.homepage      = "http://github.com/mezis/git-whistles"
+  gem.license       = 'MIT'
 
   gem.required_rubygems_version = ">= 1.3.6"
 
