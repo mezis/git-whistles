@@ -1,3 +1,6 @@
+# 2013-08-23: 0.7.7
+* [FIX] git pivotal-branch was incorrectly using a git checkout alias
+
 # 2013-08-22: 0.7.6
 * [FIX] Adds license to gemspec
 
