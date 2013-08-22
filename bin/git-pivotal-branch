@@ -53,7 +53,7 @@ class App < Git::Whistles::App
     branch_name = branch_name.empty? ? branch_name_suggested : branch_name
 
     # create branch
-    `cd #{ENV['PWD']} && git co -b #{branch_name}`
+    `cd #{ENV['PWD']} && git checkout -b #{branch_name}`
 
     # comment and start on PT
     story.notes.create :text => "Created branch #{branch_name}"
