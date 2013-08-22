@@ -1,3 +1,6 @@
+# 2013-08-22: 0.7.6
+* [FIX] Adds license to gemspec
+
 # 2013-07-18: 0.7.5
 * [FEATURE] git pivotal-branch <story-id> Creates a branch name suggestion from the specified Pivotal Tracker story ID. [dncrht]
 * [FEATURE] git outstanding-features -o allows to view all features to be deployed in one single line
