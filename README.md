@@ -1,5 +1,4 @@
-This repository is about sharing helper scripts for the [Git](http://git-scm.com/)
-version control system.
+This repository is about sharing helper scripts for the [Git](http://git-scm.com/) version control system.
 
 Install with:
 
@@ -10,16 +9,20 @@ Otherwise strange load issues may happen.
 
 Use it with:
 
-- `git ff-all-branches [-f] [-p] [-v]`. Fast-forward all local tracking branches to their remote counterpart (where possible). Very useful on big projects.
-- `git stash-and-checkout [branch]` As the name implies: stash and checkout another branch.
-- `git pull-request [--from your-branch] [--to target-branch]` Open your browser at a Github pull-request page for the specified branch (defaults to the current `head`). If you're using Pivotal Tracker and your branch has a story number in its name, populates your pull request with story details.
-- `git outstanding-features [-f from-branch] [-t to-branch] [--oneline]` List the pull requests merged in `[to-branch]` but not in `[from-branch]`. Useful to prepare a list of stuff you're going to deploy. Defaults to listing what's on `origin/master` but not on `origin/production`. By default lists one feature per line, if `--oneline` or `-o` is specified features will be separated by spaces instead. [[PedroCunha](https://github.com/PedroCunha)] 
-- `git chop [branch]` Delete the local and origin copy of a branch. Useful to close feature branches once a feature is completed. 
-- `git list-branches [-l] [-r] [-i integration-branch]` Colourful listing of all local or origin branches, and their distance to an integration branch (`master` by default).
-- `git merge-po <ancestor> <left> <right>` Merge engine for GetText PO files.
-- `git select <story-id>` Checkout a local branch with the matching number. If not found, lists remote branches
-- `git latest-pushes [-n NR_RESULTS] [-p PATTERN]` Show latest pushed branches to origin. Defaults to 20 results. Pattern is appended to refs/remotes/origin/ so include the team or project name to filter results. [[PedroCunha](https://github.com/PedroCunha)]
-- `git pivotal-branch <story-id>` Creates a branch name suggestion from the specified Pivotal Tracker story ID. It also comments on the story the branch name created and starts the story [[dncrht](https://github.com/dncrht)]
+
+| Command | Description|
+|---------|------------|
+| `git ff-all-branches [-f] [-p] [-v]`  | Fast-forward all local tracking branches to their remote counterpart (where possible). Very useful on big projects. |
+| `git stash-and-checkout [branch]`     | As the name implies: stash and checkout another branch. |
+| `git pull-request [--from your-branch] [--to target-branch]` | Open your browser at a Github pull-request page for the specified branch (defaults to the current `head`). If you're using Pivotal Tracker and your branch has a story number in its name, populates your pull request with story details. |
+| `git outstanding-features [-f from-branch] [-t to-branch] [--oneline]` | List the pull requests merged in `[to-branch]` but not in `[from-branch]`. Useful to prepare a list of stuff you're going to deploy. Defaults to listing what's on `origin/master` but not on `origin/production`. By default lists one feature per line, if `--oneline` or `-o` is specified features will be separated by spaces instead. [[PedroCunha](https://github.com/PedroCunha)] |
+| `git chop [branch ...]` | Deletes the local and origin copy of a branch. Useful to close feature branches once a feature is completed. It also accepts multiple branches separated by spaces [[David Silva](https://github.com/Davidslv)] |
+| `git list-branches [-l] [-r] [-i integration-branch]` | Colourful listing of all local or origin branches, and their distance to an integration branch (`master` by default). |
+| `git merge-po <ancestor> <left> <right>` | Merge engine for GetText PO files. |
+| `git select <story-id>`                  | Checkout a local branch with the matching number. If not found, lists remote branches |
+| `git latest-pushes [-n NR_RESULTS] [-p PATTERN]` | Show latest pushed branches to origin. Defaults to 20 results. Pattern is appended to refs/remotes/origin/ so include the team or project name to filter results. [[PedroCunha](https://github.com/PedroCunha)] |
+| `git pivotal-branch <story-id>` | Creates a branch name suggestion from the specified Pivotal Tracker story ID. It also comments on the story the branch name created and starts the story [[dncrht](https://github.com/dncrht)] |
+
 
 ### More details on some of the commands
 
