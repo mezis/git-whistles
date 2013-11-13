@@ -20,6 +20,11 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "pry"
   gem.add_development_dependency "pry-nav"
 
+  if RUBY_VERSION < "1.9"
+    gem.add_dependency "nokogiri",        "~> 1.5.10"
+    gem.add_dependency "mime-types",      "~> 1.24"
+  end
+ 
   gem.add_dependency "pivotal-tracker", "~> 0.5.6"
   gem.add_dependency "term-ansicolor"
 
