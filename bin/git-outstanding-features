@@ -20,9 +20,16 @@ class App < Git::Whistles::App
     super
     parse_args!(args)
 
-    output = `git log --oneline #{options.from} ^#{options.to} | grep 'Merge pull request' | sed  -e 's:.*from [^/]*/::'`
-    return output if output.nil?
-    puts options.oneline ? output.gsub(/\s+/, ' ') : output
+    merges = `git log --merges --first-parent #{options.from} ^#{options.to} | grep 'Merge pull request'`
+    return if merges.nil?
+
+    output = []
+    merges.lines.each do |merge|
+      merge.match(/(#\d+).*from.*\/(.*)/)
+      output << $1 + ' ' + $2
+    end
+
+    puts options.oneline ? output.join(', ') : output
   end
 
   def defaults
