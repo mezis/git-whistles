@@ -2,6 +2,8 @@ PATH
   remote: .
   specs:
     git-whistles (0.7.7)
+      mime-types (~> 1.24)
+      nokogiri (~> 1.5.10)
       pivotal-tracker (~> 0.5.6)
       term-ansicolor
 
@@ -12,23 +14,23 @@ GEM
     coderay (1.0.9)
     crack (0.4.1)
       safe_yaml (~> 0.9.0)
-    happymapper (0.4.0)
+    happymapper (0.4.1)
       libxml-ruby (~> 2.0)
     libxml-ruby (2.7.0)
     method_source (0.8.2)
-    mime-types (1.24)
-    mini_portile (0.5.1)
-    nokogiri (1.6.0)
-      mini_portile (~> 0.5.0)
-    nokogiri-happymapper (0.5.7)
+    mime-types (1.25)
+    nokogiri (1.5.10)
+    nokogiri-happymapper (0.5.8)
       nokogiri (~> 1.5)
-    pivotal-tracker (0.5.10)
+    pivotal-tracker (0.5.12)
+      builder
       builder
       crack
       happymapper (>= 0.3.2)
       nokogiri (>= 1.4.3)
       nokogiri (>= 1.5.5)
       nokogiri-happymapper (>= 0.5.4)
+      rest-client (~> 1.6.0)
       rest-client (~> 1.6.0)
     pry (0.9.12.2)
       coderay (~> 1.0.5)
@@ -39,11 +41,11 @@ GEM
     rake (10.1.0)
     rest-client (1.6.7)
       mime-types (>= 1.16)
-    safe_yaml (0.9.5)
+    safe_yaml (0.9.7)
     slop (3.4.6)
     term-ansicolor (1.2.2)
       tins (~> 0.8)
-    tins (0.9.0)
+    tins (0.13.1)
 
 PLATFORMS
   ruby
