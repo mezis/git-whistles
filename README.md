@@ -1,3 +1,6 @@
+git whistles [![Gem Version](https://badge.fury.io/rb/git-whistles.png)](http://badge.fury.io/rb/git-whistles)
+=====
+
 This repository is about sharing helper scripts for the [Git](http://git-scm.com/) version control system.
 
 Install with:
