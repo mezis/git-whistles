@@ -20,13 +20,13 @@ class App < Git::Whistles::App
     super
     parse_args!(args)
 
-    merges = `git log --merges --first-parent #{options.from} ^#{options.to} | grep 'Merge pull request'`
+    merges = `git log --merges --first-parent --oneline #{options.from} ^#{options.to} | grep 'Merge pull request'`
     return if merges.nil?
 
     output = []
     merges.lines.each do |merge|
-      merge.match(/(#\d+).*from.*\/(.*)/)
-      output << $1 + ' ' + $2
+      merge.match /(#\d+).*from(.*)/ 
+      output << $1.strip + ' ' + $2.strip
     end
 
     puts options.oneline ? output.join(', ') : output
