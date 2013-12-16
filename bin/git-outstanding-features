@@ -25,7 +25,7 @@ class App < Git::Whistles::App
 
     output = []
     merges.lines.each do |merge|
-      merge.match /(#\d+).*from(.*)/ 
+      merge.match /(#\d+).*from (.*)/ 
       output << $1.strip + ' ' + $2.strip
     end
 
