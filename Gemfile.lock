@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    git-whistles (0.8.2)
+    git-whistles (0.9.0)
       pivotal-tracker (~> 0.5.6)
       term-ansicolor
 
