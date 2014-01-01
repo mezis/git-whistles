@@ -41,8 +41,8 @@ class App < Git::Whistles::App
 
   def defaults
     {
-      :ref => run!('git rev-parse --abbrev-ref HEAD'),
-      :file   => nil
+      :ref  => run!('git rev-parse --abbrev-ref HEAD'),
+      :file => nil
     }
   end
 
