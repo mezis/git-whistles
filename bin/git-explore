@@ -1,0 +1,75 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+#
+# git-explore [-r ref] [-p path]
+#
+#   Explore the given reference on the remote origin website
+#
+require 'rubygems'
+require 'optparse'
+require 'term/ansicolor'
+require 'git-whistles/app'
+
+class App < Git::Whistles::App
+
+  GITHUB_URL = 'https://www.github.com'
+
+  def main(args)
+    super
+    parse_args!(args)
+
+    remote_origin_url = run!("git config --get remote.origin.url").strip
+
+    die 'Unknown origin. Only github supported at the moment', :usage => true unless github?(remote_origin_url)
+
+    # This has to support both variants
+    # https://github.com/mezis/git-whistles.git
+    # git@github.com:mezis/git-whistles.git
+    remote_origin_url.match /github\.com[:\/](.+)\.git/
+
+    die "Error parsing #{remote_origin_url} could not find repo" unless $1
+
+    repo      = $1
+    reference = "tree/#{ options.ref.strip }"
+    path      = options.path ? "#{ options.path.strip }" : ''
+
+    url = "#{GITHUB_URL}/#{repo}/#{reference}/#{path}"
+
+    puts "opening #{ url }..."
+    run! "open #{ url }"
+  end
+
+  def defaults
+    {
+      :ref  => run!('git rev-parse --abbrev-ref HEAD'),
+      :file => nil
+    }
+  end
+
+  def option_parser
+    @option_parser ||= OptionParser.new do |op|
+      op.banner = "Usage: git explore [-b branch] [-f file]"
+
+      op.on("-r", "--ref REFERENCE", "Reference to explore. Defaults to current branch") do |ref|
+        options.ref = ref
+      end
+
+      op.on("-p", "--path PATH", "Path to explore. Defaults to /") do |path|
+        options.path = path
+      end
+
+      op.on_tail("-h", "--help", "Show this message") do
+        puts op
+        exit
+      end
+    end
+  end
+
+  private
+  def github?(origin)
+    origin.match %r{github.com} 
+  end
+
+end
+
+App.run!
