@@ -7,9 +7,6 @@ Install with:
 
     gem install git-whistles
 
-*Note*: if you installed a previous version of this by cloning the repository, you'll have to remove that clone from your `PATH`.
-Otherwise strange load issues may happen.
-
 Use it with:
 
 
@@ -25,6 +22,7 @@ Use it with:
 | `git select <story-id>`                  | Checkout a local branch with the matching number. If not found, lists remote branches |
 | `git latest-pushes [-n NR_RESULTS] [-p PATTERN]` | Show latest pushed branches to origin. Defaults to 20 results. Pattern is appended to refs/remotes/origin/ so include the team or project name to filter results. [[PedroCunha](https://github.com/PedroCunha)] |
 | `git pivotal-branch <story-id>` | Creates a branch name suggestion from the specified Pivotal Tracker story ID. It also comments on the story the branch name created and starts the story [[dncrht](https://github.com/dncrht)] |
+| `git explore [-r REF] [-p PATH]` | Opens the remote origin interface on the given reference and path. Reference defaults to current branch and path to root [[PedroCunha](https://github.com/pedrocunha)]|
 
 
 ### More details on some of the commands
