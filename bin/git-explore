@@ -12,9 +12,7 @@ require 'git-whistles/app'
 
 class App < Git::Whistles::App
 
-  def initialize
-    super
-  end
+  GITHUB_URL = 'https://www.github.com'
 
   def main(args)
     super
@@ -22,10 +20,7 @@ class App < Git::Whistles::App
 
     remote_origin_url = run!("git config --get remote.origin.url").strip
 
-    die 'Uknown origin. Only github supported at the moment', :usage => true unless github?(remote_origin_url)
-
-    # Building URL
-    url = "https://www.github.com/"
+    die 'Unknown origin. Only github supported at the moment', :usage => true unless github?(remote_origin_url)
 
     # This has to support both variants
     # https://github.com/mezis/git-whistles.git
@@ -34,16 +29,11 @@ class App < Git::Whistles::App
 
     die "Error parsing #{remote_origin_url} could not find repo" unless $1
 
-    # Add repo
-    url << $1
+    repo      = $1
+    reference = "tree/#{ options.ref.strip }"
+    path      = options.path ? "#{ options.path.strip }" : ''
 
-    # Add reference
-    url << "/tree/#{ options.ref.strip }"
-
-    # Path
-    if options.path
-      url << "/#{ options.path.strip }"
-    end
+    url = "#{GITHUB_URL}/#{repo}/#{reference}/#{path}"
 
     puts "opening #{ url }..."
     run! "open #{ url }"
