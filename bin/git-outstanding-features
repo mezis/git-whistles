@@ -20,7 +20,7 @@ class App < Git::Whistles::App
     super
     parse_args!(args)
 
-    merges = `git log --merges --first-parent --oneline #{options.from} ^#{options.to} | grep 'Merge pull request'`
+    merges = `git log --merges --oneline #{options.from} ^#{options.to} | grep 'Merge pull request'`
     return if merges.nil?
 
     output = []
