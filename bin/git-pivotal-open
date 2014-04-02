@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 #
-# git-pt-open
+# git-pivotal-open
 #
 # Opens the PivotalTracker story page for the current branch,
 # assuming the current branch name contains a story id
@@ -67,6 +67,17 @@ class App < Git::Whistles::App
         $ git config [--global] pivotal-tracker.token <token>
     }
     die "Aborting."
+  end
+
+  def option_parser
+    @option_parser ||= OptionParser.new do |op|
+      op.banner = "Usage: git pivotal-open [story-id]"
+
+      op.on_tail("-h", "--help", "Show this message") do
+        puts op
+        exit
+      end
+    end
   end
 
 end
