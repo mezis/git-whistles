@@ -1,0 +1,88 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+#
+# git-pivotal-open
+#
+# Opens the Pivotal Tracker story page for the current branch,
+# from the specified Pivotal Tracker story ID
+# or it is inferred from the branch name if not supplied
+
+require 'rubygems'
+require 'optparse'
+require 'pivotal-tracker'
+require 'term/ansicolor'
+require 'git-whistles/app'
+
+class App < Git::Whistles::App
+
+  def initialize
+    super
+  end
+
+  def main(args)
+    super
+    parse_args!(args)
+
+    @story_id = if args.empty?
+                  branch_name =`git rev-parse --abbrev-ref HEAD`.strip
+                  branch_name.scan(/\d{8,}/).first
+                else
+                  args.first
+                end
+
+    setup_pivotal_tracker_client
+
+    warn_story_not_found if @story_id.nil?
+
+    PivotalTracker::Project.all.find do |project|
+      story = project.stories.find(@story_id)
+      next unless story
+
+      system('open', story.url) and return
+    end
+
+    warn_story_not_found
+  end
+
+  private
+
+  def setup_pivotal_tracker_client
+    token = `git config pivotal-tracker.token`.strip
+    if token.empty?
+      warn_missing_pivotal_tracker_token
+    end
+    PivotalTracker::Client.token = token
+  end
+
+  def warn_story_not_found
+    puts Term::ANSIColor.yellow %Q{
+        Story ID: '#{@story_id}' cannot be found in your projects.
+    }
+    die "Aborting."
+  end
+
+  def warn_missing_pivotal_tracker_token
+    puts Term::ANSIColor.yellow %Q{
+        I don't know your Pivotal Tracker token!
+        Please set it with:
+        $ git config [--global] pivotal-tracker.token <token>
+    }
+    die "Aborting."
+  end
+
+  def option_parser
+    @option_parser ||= OptionParser.new do |op|
+      op.banner = "Usage: git pivotal-open [story-id]"
+
+      op.on_tail("-h", "--help", "Show this message") do
+        puts op
+        exit
+      end
+    end
+  end
+
+end
+
+############################################################################
+
+App.run!
