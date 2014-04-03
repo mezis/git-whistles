@@ -3,8 +3,9 @@
 #
 # git-pivotal-open
 #
-# Opens the PivotalTracker story page for the current branch,
-# assuming the current branch name contains a story id
+# Opens the Pivotal Tracker story page for the current branch,
+# from the specified Pivotal Tracker story ID
+# or it is inferred from the branch name if not supplied
 
 require 'rubygems'
 require 'optparse'
