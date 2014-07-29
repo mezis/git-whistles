@@ -2,12 +2,12 @@
 # encoding: UTF-8
 #
 # git-pull-request --
-# 
+#
 #   Open a pull request for the current branch in your default browser
-# 
+#
 #   Assumes the branches are named
 #   <team>/<branch-title>-<story-id>
-# 
+#
 require 'rubygems'
 require 'pivotal-tracker'
 require 'optparse'
@@ -50,6 +50,8 @@ class App < Git::Whistles::App
     title = options.from.split('/').last.split(/[_-]/).delete_if { |word| word =~ /^\d+$/ }.join(' ').capitalize
     query[:"pull_request[title]"] = team ? "#{team}: #{title}" : title
 
+    cleanup_travis_config
+
     # add Pivotal infos
     add_pivotal_info(query, $1.to_i) if options.from =~ /(\d+)$/
 
@@ -58,7 +60,7 @@ class App < Git::Whistles::App
     }.join('&')
     url = "https://github.com/#{repo}/compare/#{options.to}...#{options.from}?#{query_string}"
     puts "Preparing a pull request for branch #{options.from}"
-    
+
     unless launch_browser(url)
       log.warn "Sorry, I don't know how to launch a web browser on your system. You can open it yourself and paste this URL:\n#{url}"
     end
@@ -101,11 +103,32 @@ class App < Git::Whistles::App
         url =~ /github\.com/ or die "origin does not have a Github URL !"
       end
     end
-  end    
+  end
 
 
   def repo
     @repo ||= origin_url.sub(/.*github\.com[\/:]/,'').sub(/\.git$/,'')
+  end
+
+
+  def cleanup_travis_config
+    # Get the current Travis config
+    travis_config = File.join(Dir.pwd, '.travis.yml')
+    config = File.read travis_config
+    # Get the current branch name
+    current_branch = `git symbolic-ref --short HEAD`.strip
+    story_id = `git symbolic-ref --short HEAD | awk -F"-"  '{ print  $NF }'`.strip
+    # remove the current branch name and write the new Travis config file
+    if config.gsub!("- #{current_branch.strip}\n", "")
+      File.open(travis_config, 'w') {|f| f.write config }
+      # Commit the new Travis config file
+      puts "Committing..."
+      `git add .travis.yml`
+      `git commit -m "[##{story_id}] removing branch name from .travis.yml"`
+      # Push to the local branch and have Travis do its thing.
+      puts "Pushing..."
+      `git push origin #{current_branch}`
+    end
   end
 
 
