@@ -2,12 +2,12 @@
 # encoding: UTF-8
 #
 # git-pull-request --
-# 
+#
 #   Open a pull request for the current branch in your default browser
-# 
+#
 #   Assumes the branches are named
 #   <team>/<branch-title>-<story-id>
-# 
+#
 require 'rubygems'
 require 'pivotal-tracker'
 require 'optparse'
@@ -58,7 +58,7 @@ class App < Git::Whistles::App
     }.join('&')
     url = "https://github.com/#{repo}/compare/#{options.to}...#{options.from}?#{query_string}"
     puts "Preparing a pull request for branch #{options.from}"
-    
+
     unless launch_browser(url)
       log.warn "Sorry, I don't know how to launch a web browser on your system. You can open it yourself and paste this URL:\n#{url}"
     end
@@ -101,7 +101,7 @@ class App < Git::Whistles::App
         url =~ /github\.com/ or die "origin does not have a Github URL !"
       end
     end
-  end    
+  end
 
 
   def repo
@@ -139,7 +139,7 @@ class App < Git::Whistles::App
 
     headline = "Pivotal tracker story [##{story_id}](#{story.url}) in project *#{project.name}*:"
     description = story.description.split("\n").map { |line| "> #{line}" }.join("\n")
-    body = "#{headline}\n\n#{description}"
+    body = "TODO: describe your changes\n\n===\n\n#{headline}\n\n#{description}"
     title = "#{project.name}: #{story.name} [##{story.id}]"
     query.merge! :subject => story.name, :"pull_request[body]" => body, :"pull_request[title]" => title
     return
