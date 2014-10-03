@@ -98,7 +98,7 @@ class App < Git::Whistles::App
         options.remote_checkout = true
       end
 
-      op.on("-p", "--prefix", "Checkout a remote branch and adds a prefix to the branch name") do |v|
+      op.on("-p", "--prefix PREFIX", "Checkout a remote branch and adds a prefix to the branch name") do |v|
         options.prefix = true
         options.prefix_value = v
       end
