@@ -22,7 +22,7 @@ class App < Git::Whistles::App
     parse_args!(args)
 
     die "Missing story id", :usage => true     if args.count == 0
-    die "Too many arguments", :usage => true   if args.count > 1
+    die "Too many arguments", :usage => true   if args.count > 2
 
     story_id = args.first
 
