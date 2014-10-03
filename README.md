@@ -19,7 +19,7 @@ Use it with:
 | `git chop [branch ...]` | Deletes the local and origin copy of a branch. Useful to close feature branches once a feature is completed. It also accepts multiple branches separated by spaces [[David Silva](https://github.com/Davidslv)] |
 | `git list-branches [-l] [-r] [-i integration-branch]` | Colourful listing of all local or origin branches, and their distance to an integration branch (`master` by default). |
 | `git merge-po <ancestor> <left> <right>` | Merge engine for GetText PO files. |
-| `git select <story-id>`                  | Checkout a local branch with the matching number. If not found, lists remote branches |
+| `git select <story-id> [-p PREFIX]`                  | Checkout a local branch with the matching number. If not found, lists remote branches. With -p you can add a prefix to your local branch name.  |
 | `git latest-pushes [-n NR_RESULTS] [-p PATTERN]` | Show latest pushed branches to origin. Defaults to 20 results. Pattern is appended to refs/remotes/origin/ so include the team or project name to filter results. [[PedroCunha](https://github.com/PedroCunha)] |
 | `git pivotal-branch <story-id>` | Creates a branch name suggestion from the specified Pivotal Tracker story ID. It also comments on the story the branch name created and starts the story [[dncrht](https://github.com/dncrht)] |
 | `git pivotal-open [story-id]` | Opens the Pivotal Tracker story page for the current branch, from the specified Pivotal Tracker story ID or it is inferred from the branch name if not supplied [[khiet](https://github.com/khiet)] |

@@ -61,8 +61,8 @@ class App < Git::Whistles::App
     when 0
       puts yellow 'failed lookup on remote branches'
     when 1
-      if options.others_branch
-        `git checkout --track -b others/#{branch_name(found.first)} origin/#{branch_name(found.first)}`
+      if options.prefix
+        `git checkout --track -b #{options.prefix_value}/#{branch_name(found.first)} origin/#{branch_name(found.first)}`
         exit 0
       elsif options.remote_checkout
         `git checkout #{branch_name(found.first)}`
@@ -86,8 +86,7 @@ class App < Git::Whistles::App
 
   def defaults
     {
-      :remote_checkout => false,
-      :others_branch => false
+      :remote_checkout => false
     }
   end
 
@@ -99,8 +98,9 @@ class App < Git::Whistles::App
         options.remote_checkout = true
       end
 
-      op.on("-o", "--others", "Checkout a remote branch and adds a prefix to the branch name") do |v|
-        options.others_branch = true
+      op.on("-p", "--prefix", "Checkout a remote branch and adds a prefix to the branch name") do |v|
+        options.prefix = true
+        options.prefix_value = v
       end
 
       op.on_tail("-h", "--help", "Show this message") do
