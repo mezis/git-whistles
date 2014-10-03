@@ -22,7 +22,7 @@ class App < Git::Whistles::App
     parse_args!(args)
 
     die "Missing story id", :usage => true     if args.count == 0
-    die "Too many arguments", :usage => true   if args.count > 1
+    die "Too many arguments", :usage => true   if args.count > 2
 
     story_id = args.first
 
@@ -61,13 +61,17 @@ class App < Git::Whistles::App
     when 0
       puts yellow 'failed lookup on remote branches'
     when 1
-      if options.remote_checkout
+      if options.prefix
+        `git checkout --track -b #{options.prefix_value}/#{branch_name(found.first)} origin/#{branch_name(found.first)}`
+        exit 0
+      elsif options.remote_checkout
         `git checkout #{branch_name(found.first)}`
         exit 0
       else
         puts "found #{green(branch_name(found.first))} on remote"
         puts "by default remote branches are not checked out" 
         puts "if you want to checkout do: #{green "git select -r #{story_id}"}"
+        puts "if you want to checkout with a prefix: #{green "git select -o #{story_id}"}"
         exit 1
       end
     else
@@ -92,6 +96,11 @@ class App < Git::Whistles::App
 
       op.on("-r", "--remote", "Checkout branch from remote if not present locally") do |v|
         options.remote_checkout = true
+      end
+
+      op.on("-p", "--prefix PREFIX", "Checkout a remote branch and adds a prefix to the branch name") do |v|
+        options.prefix = true
+        options.prefix_value = v
       end
 
       op.on_tail("-h", "--help", "Show this message") do
