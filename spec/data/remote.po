@@ -1,0 +1,39 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Remote header\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "This little piggie is unchanged"
+msgstr "1"
+
+# msgid "This little piggie is removed from remote, unchanged on local"
+# msgstr "2"
+
+# msgid "This little piggie is removed from remote, changed on local"
+# msgstr "3"
+
+msgid "This little piggie is removed from local, unchanged on remote"
+msgstr "4"
+
+msgid "This little piggie is removed from local, changed on remote"
+msgstr "5.remote"
+
+msgid "This little piggie is changed on local, unchanged on remote"
+msgstr "6"
+
+msgid "This little piggie is changed on remote, unchanged on local"
+msgstr "7.remote"
+
+msgid "This little piggie is changed on remote and local"
+msgstr "8.remote"
+
+msgid "This little piggie is added on remote, not on local"
+msgstr "9.remote"
+
+# msgid "This little piggie is added on local, not on remote"
+# msgstr "10"
+
+msgid "This little piggie is added on local and remote, with different values"
+msgstr "11.remote"
+
+
