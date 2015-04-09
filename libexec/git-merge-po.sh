@@ -1,110 +1,115 @@
-#!/bin/bash
-# git merge driver for .PO files
-# Copyright (c) Mikko Rantalainen <mikko.rantalainen@peda.net>, 2013
-# License: MIT
-# From: http://stackoverflow.com/questions/16214067/wheres-the-3-way-git-merge-driver-for-po-gettext-files
+#!/bin/sh
+#
+# Three-way merge driver for PO files
+#
+set -e
 
-ORIG_HASH=$(git hash-object "${1}")
-WORKFILE=$(git ls-tree -r HEAD | fgrep "$ORIG_HASH" | cut -b54-)
-echo "Using custom merge driver for $WORKFILE..."
+# failure handler
+on_error() {
+  local parent_lineno="$1"
+  local message="$2"
+  local code="${3:-1}"
+  if [[ -n "$message" ]] ; then
+    echo "Error on or near line ${parent_lineno}: ${message}; exiting with status ${code}"
+  else
+    echo "Error on or near line ${parent_lineno}; exiting with status ${code}"
+  fi
+  exit 255
+}
+trap 'on_error ${LINENO}' ERR
 
-BASE="${1}._BASE_"
-LOCAL="${2}._LOCAL_"
-REMOTE="${3}._REMOTE_"
+# given a file, find the path that matches its contents
+show_file() {
+  hash=`git hash-object "${1}"`
+  git ls-tree -r HEAD | fgrep "$hash" | cut -b54-
+}
 
-LOCAL_ONELINE="$LOCAL""ONELINE_"
-BASE_ONELINE="$BASE""ONELINE_"
-REMOTE_ONELINE="$REMOTE""ONELINE_"
+# wraps msgmerge with default options
+function m_msgmerge() {
+  msgmerge --force-po --quiet --no-fuzzy-matching $@
+}
 
-OUTPUT="$LOCAL""OUTPUT_"
-MERGED="$LOCAL""MERGED_"
-MERGED2="$LOCAL""MERGED2_"
-
-TEMPLATE1="$LOCAL""TEMPLATE1_"
-TEMPLATE2="$LOCAL""TEMPLATE2_"
-FALLBACK_OBSOLETE="$LOCAL""FALLBACK_OBSOLETE_"
-
-# standardize the input files for regexping
-# default to UTF-8 in case charset is still the placeholder "CHARSET"
-cat "${1}" | perl -npe 's!(^"Content-Type: text/plain; charset=)(CHARSET)(\\n"$)!$1UTF-8$3!' | msgcat --no-wrap --sort-output - > "$LOCAL"
-cat "${2}" | perl -npe 's!(^"Content-Type: text/plain; charset=)(CHARSET)(\\n"$)!$1UTF-8$3!' | msgcat --no-wrap --sort-output - > "$BASE"
-cat "${3}" | perl -npe 's!(^"Content-Type: text/plain; charset=)(CHARSET)(\\n"$)!$1UTF-8$3!' | msgcat --no-wrap --sort-output - > "$REMOTE"
-
-# convert each definition to single line presentation
-# extra fill is required to make sure that git separates each conflict 
-perl -npe 'BEGIN {$/ = "\n\n"}; s/#\n$/\n/s; s/#/##/sg; s/\n/#n/sg; s/#n$/\n/sg; s/#n$/\n/sg; $_.="#fill#\n" x 4' "$LOCAL" > "$LOCAL_ONELINE"
-perl -npe 'BEGIN {$/ = "\n\n"}; s/#\n$/\n/s; s/#/##/sg; s/\n/#n/sg; s/#n$/\n/sg; s/#n$/\n/sg; $_.="#fill#\n" x 4' "$BASE"  > "$BASE_ONELINE"
-perl -npe 'BEGIN {$/ = "\n\n"}; s/#\n$/\n/s; s/#/##/sg; s/\n/#n/sg; s/#n$/\n/sg; s/#n$/\n/sg; $_.="#fill#\n" x 4' "$REMOTE"  > "$REMOTE_ONELINE"
-
-# merge files using normal git merge machinery
-git merge-file -p --union -L "Current (working directory)" -L "Base (common ancestor)" -L "Incoming (applied changeset)" "$LOCAL_ONELINE" "$BASE_ONELINE" "$REMOTE_ONELINE" > "$MERGED"
-MERGESTATUS=$?
-
-# remove possibly duplicated headers (workaround msguniq bug http://comments.gmane.org/gmane.comp.gnu.gettext.bugs/96)
-cat "$MERGED" | perl -npe 'BEGIN {$/ = "\n\n"}; s/^([^\n]+#nmsgid ""#nmsgstr ""#n.*?\n)([^\n]+#nmsgid ""#nmsgstr ""#n.*?\n)+/$1/gs' > "$MERGED2"
-
-# remove lines that have totally empty msgstr
-# and convert back to normal PO file representation
-cat "$MERGED2" | grep -v '#nmsgstr ""$' | grep -v '^#fill#$' | perl -npe 's/#n/\n/g; s/##/#/g' > "$MERGED"
-
-# run the output through msguniq to merge conflicts gettext style
-# msguniq seems to have a bug that causes empty output if zero msgids
-# are found after the header. Expected output would be the header...
-# Workaround the bug by adding an empty obsolete fallback msgid
-# that will be automatically removed by msguniq
-
-cat > "$FALLBACK_OBSOLETE" << 'EOF'
-
-#~ msgid "obsolete fallback"
-#~ msgstr ""
-
-EOF
-cat "$MERGED" "$FALLBACK_OBSOLETE" | msguniq --no-wrap --sort-output > "$MERGED2"
+# wraps msgcat with default options
+function m_msgcat() {
+  msgcat --force-po $@
+}
 
 
-# create a hacked template from default merge between 3 versions
-# we do this to try to preserve original file ordering
-msgcat --use-first "$LOCAL" "$REMOTE" "$BASE" > "$TEMPLATE1"
-msghack --empty "$TEMPLATE1" > "$TEMPLATE2"
-msgmerge --silent --no-wrap --no-fuzzy-matching "$MERGED2" "$TEMPLATE2" > "$OUTPUT"
+# removes the "graveyard strings" from the input
+function strip_graveyard() {
+  sed -e '/^#~/d'
+}
 
-# show some results to stdout
-if grep -q '#-#-#-#-#' "$OUTPUT"
-then
-    FUZZY=$(cat "$OUTPUT" | msgattrib --only-fuzzy --no-obsolete --color | perl -npe 'BEGIN{ undef $/; }; s/^.*?msgid "".*?\n\n//s')
-    if test -n "$FUZZY"
-    then
-        echo "-------------------------------"
-        echo "Fuzzy translations after merge:"
-        echo "-------------------------------"
-        echo "$FUZZY"
-        echo "-------------------------------"
-    fi
+# select messages with a conflict marker
+# pass -v to inverse selection
+function grep_conflicts() {
+  msggrep $@ --msgstr -F -e '#-#-#' -
+}
+
+# select messages from $1 that are also in $2 but whose contents have changed
+function extract_changes() {
+  msgcat -o - $1 $2 \
+    | grep_conflicts \
+    | m_msgmerge -o - $1 - \
+    | strip_graveyard
+}
+
+
+BASE=$1
+LOCAL=$2
+REMOTE=$3
+OUTPUT=$LOCAL
+TEMP=`mktemp /tmp/merge-po.XXXX`
+
+echo "Using custom PO merge driver (`show_file ${LOCAL}`; $TEMP)"
+
+# Extract the PO header from the current branch (top of file until first empty line)
+sed -e '/^$/q' < $LOCAL > ${TEMP}.header
+
+# clean input files
+msguniq --force-po -o ${TEMP}.base   --unique ${BASE}
+msguniq --force-po -o ${TEMP}.local  --unique ${LOCAL}
+msguniq --force-po -o ${TEMP}.remote --unique ${REMOTE}
+
+# messages changed on local
+extract_changes ${TEMP}.local ${TEMP}.base > ${TEMP}.local-changes
+
+# messages changed on remote
+extract_changes ${TEMP}.remote ${TEMP}.base > ${TEMP}.remote-changes
+
+# unchanged messages
+m_msgcat -o - ${TEMP}.base ${TEMP}.local ${TEMP}.remote \
+  | grep_conflicts -v \
+  > ${TEMP}.unchanged
+
+# messages changed on both local and remote (conflicts)
+m_msgcat -o - ${TEMP}.remote-changes ${TEMP}.local-changes \
+  | grep_conflicts \
+  > ${TEMP}.conflicts
+
+# messages changed on local, not on remote; and vice-versa
+m_msgcat -o ${TEMP}.local-only  --unique ${TEMP}.local-changes  ${TEMP}.conflicts
+m_msgcat -o ${TEMP}.remote-only --unique ${TEMP}.remote-changes ${TEMP}.conflicts
+
+# the big merge
+m_msgcat -o ${TEMP}.merge1 ${TEMP}.unchanged ${TEMP}.conflicts ${TEMP}.local-only ${TEMP}.remote-only
+
+# create a template to filter messages actually needed (those on local and remote)
+m_msgcat -o - ${TEMP}.local ${TEMP}.remote \
+  | m_msgmerge -o ${TEMP}.merge2 ${TEMP}.merge1 -
+
+# final merge, adds saved header
+m_msgcat -o ${TEMP}.merge3 --use-first ${TEMP}.header ${TEMP}.merge2
+
+# produce output file (overwrites input LOCAL file)
+cat ${TEMP}.merge3 > $OUTPUT
+
+# check for conflicts
+if grep '#-#' $OUTPUT > /dev/null ; then
+  echo "Conflict(s) detected"
+  echo "   between ${TEMP}.local and ${TEMP}.remote"
+  exit 1
 fi
+rm -f ${TEMP}*
+exit 0
 
-# git merge driver must overwrite the first parameter with output
-mv "$OUTPUT" "${1}"
-
-# cleanup
-rm -f "$LOCAL" "$BASE" "$REMOTE" "$LOCAL_ONELINE" "$BASE_ONELINE" "$REMOTE_ONELINE" "$MERGED" "$MERGED2" "$TEMPLATE1" "$TEMPLATE2" "$FALLBACK_OBSOLETE"
-
-# return conflict if merge has conflicts according to msgcat/msguniq
-grep -q '#-#-#-#-#' "${1}" && exit 1
-
-# otherwise, return git merge status
-exit $MERGESTATUS
-
-# Steps to install this driver:
-# (1) Edit ".git/config" in your repository directory
-# (2) Add following section:
-#
-# [merge "merge-po-files"]
-#   name = merge po-files driver
-#   driver = ./bin/merge-po-files %A %O %B
-#   recursive = binary
-#
-# or
-#
-# git config merge.merge-po-files.driver "./bin/merge-po-files %A %O %B"
-#
-# The file ".gitattributes" will point git to use this merge driver.
