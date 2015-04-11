@@ -124,11 +124,16 @@ class App < Git::Whistles::App
     log.info "Finding your project and story¬"
 
     PivotalTracker::Client.token = token
-    story, project = PivotalTracker::Project.all.find do |project|
-      log.info '.¬'
-      story = project.stories.find(story_id) and break story, project
+    begin
+      story, project = PivotalTracker::Project.all.find do |project|
+        log.info '.¬'
+        story = project.stories.find(story_id) and break story, project
+      end
+      log.info '.'
+    rescue RestClient::Unauthorized
+      log.info '.'
+      die "Your token is not authorized by Pivotal Tracker! Please make sure you have the correct one"
     end
-    log.info '.'
 
     if story.nil?
       log.warn "Apologies... I could not find story #{story_id}."
