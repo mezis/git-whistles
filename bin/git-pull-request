@@ -18,7 +18,8 @@ require 'git-whistles/app'
 
 class App < Git::Whistles::App
 
-  Browsers = %w(xdg-open open firefox iceweasel)
+  BROWSERS               = %w(xdg-open open firefox iceweasel)
+  SAFE_QUERY_STRING_SIZE = 8000
 
   def initialize
     super
@@ -57,6 +58,7 @@ class App < Git::Whistles::App
       "#{CGI.escape key.to_s}=#{CGI.escape value}"
     }.join('&')
     url = "https://github.com/#{repo}/compare/#{options.to}...#{options.from}?#{query_string}"
+
     puts "Preparing a pull request for branch #{options.from}"
 
     unless launch_browser(url)
@@ -64,9 +66,7 @@ class App < Git::Whistles::App
     end
   end
 
-
   private
-
 
   def defaults
     {
@@ -137,21 +137,37 @@ class App < Git::Whistles::App
 
     log.info "Found story #{story_id} in '#{project.name}'"
 
-    headline = "Pivotal tracker story [##{story_id}](#{story.url}) in project *#{project.name}*:"
+    title       = "#{project.name}: #{story.name} [##{story.id}]"
+    headline    = "Pivotal tracker story [##{story_id}](#{story.url}) in project *#{project.name}*:"
     description = story.description.split("\n").map { |line| "> #{line}" }.join("\n")
-    body = "TODO: describe your changes\n\n===\n\n#{headline}\n\n#{description}"
-    title = "#{project.name}: #{story.name} [##{story.id}]"
-    query.merge! :subject => story.name, :"pull_request[body]" => body, :"pull_request[title]" => title
-    return
+
+    query.merge! subject: story.name, :"pull_request[title]" => title
+
+    if (headline.length + description.length) > SAFE_QUERY_STRING_SIZE
+      log.warn "Oops looks like your story body exceeds maximum allowed caracters to send a github request"
+      log.warn "Please copy the info below to your pull request body:"
+      puts
+      puts headline
+      puts
+      puts
+      puts description
+      puts
+      puts
+      puts "Press any key to continue..."
+      gets
+      query.merge! :"pull_request[body]" => "Please check your command line for the story body"
+    else
+      body = "TODO: describe your changes\n\n===\n\n#{headline}\n\n#{description}"
+      query.merge! :"pull_request[body]" => body
+    end
   end
 
   def launch_browser(url)
-    Browsers.each do |command|
+    BROWSERS.each do |command|
       next if run("which #{command}").strip.empty?
-      system command, url
-      return true
+      system(command, url) and return true
     end
-    return false
+    false
   end
 
 
