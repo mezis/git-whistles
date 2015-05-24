@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 #
-# git-pull-request --
+# git-pivotal-pr --
 #
 #   Open a pull request for the current branch in your default browser
 #
@@ -78,7 +78,7 @@ class App < Git::Whistles::App
 
   def option_parser
     @option_parser ||= OptionParser.new do |op|
-      op.banner = "Usage: git pull-request [options]"
+      op.banner = "Usage: git pivotal-pr [options]"
 
       op.on("-f", "--from YOUR_BRANCH", "Branch to issue pull request for [head]") do |v|
         options.from = v
