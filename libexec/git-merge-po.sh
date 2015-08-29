@@ -3,20 +3,20 @@
 # Three-way merge driver for PO files
 #
 set -e
-
+IFS=
 # failure handler
 on_error() {
   local parent_lineno="$1"
-  local message="$2"
-  local code="${3:-1}"
+  local message="$3"
+  local code="$2"
   if [[ -n "$message" ]] ; then
-    echo "Error on or near line ${parent_lineno}: ${message}; exiting with status ${code}"
+    echo "Error on or near line ${parent_lineno}: ${message}; Code ${code}"
   else
-    echo "Error on or near line ${parent_lineno}; exiting with status ${code}"
+    echo "Error on or near line ${parent_lineno}; Code ${code}"
   fi
   exit 255
 }
-trap 'on_error ${LINENO}' ERR
+trap 'on_error ${LINENO} $?' ERR
 
 # given a file, find the path that matches its contents
 show_file() {
@@ -43,7 +43,7 @@ function strip_graveyard() {
 # select messages with a conflict marker
 # pass -v to inverse selection
 function grep_conflicts() {
-  msggrep $@ --msgstr -F -e '#-#-#' -
+  msggrep $@ --msgstr -F -e '#-#-#-#-#' -
 }
 
 # select messages from $1 that are also in $2 but whose contents have changed
@@ -105,7 +105,7 @@ m_msgcat -o ${TEMP}.merge3 --use-first ${TEMP}.header ${TEMP}.merge2
 cat ${TEMP}.merge3 > $OUTPUT
 
 # check for conflicts
-if grep '#-#' $OUTPUT > /dev/null ; then
+if grep -q '#-#-#-#-#' $OUTPUT ; then
   echo "Conflict(s) detected"
   echo "   between ${TEMP}.local and ${TEMP}.remote"
   exit 1
