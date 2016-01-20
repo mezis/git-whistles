@@ -6,7 +6,7 @@
 #   Suggest a branch name from the given JIRA issue ID
 # 
 #   Assumes the branches are named as:
-#   <team>/<branch-title>-<story-id>
+#   <issue-id>-<branch-title>
 # 
 require 'rubygems'
 require 'optparse'
@@ -29,12 +29,12 @@ class App < Git::Whistles::App
       show_and_exit usage
     end
 
-    story_id = args[0]
+    issue_id = args[0]
 
-    # get PT info
-    issue = get_jira_info(story_id)
+    # get JIRA Issue info
+    issue = get_jira_info(issue_id)
 
-    branch_name_suggested = "#{story_id.upcase}-#{issue.fields['summary'].downcase}"
+    branch_name_suggested = "#{issue_id.upcase}-#{issue.fields['summary'].downcase}"
     branch_name_suggested.gsub!(/[^\w\d\/]/, '-').gsub!(/-+/, '-')
 
     puts 'The suggested branch name is: ' << Term::ANSIColor.yellow(branch_name_suggested)
@@ -69,16 +69,20 @@ class App < Git::Whistles::App
       # Seems we need to do this in two updates.  JIRA complained if we tried to transition and update fields.
       attrs = {
         update: {
-          comment: [{
-                      add: {
-                        body: "Created branch #{branch_name}"
-                      }
-                    }],
-          assignee: [{
-                       set: {
-                         name: @username
-                       }
-                     }]
+          comment: [
+            {
+              add: {
+                body: "Created branch #{branch_name}"
+              }
+            }
+          ],
+          assignee: [
+            {
+              set: {
+                name: @username
+              }
+            }
+          ]
         }
       }
       issue.save!(attrs)
@@ -91,16 +95,20 @@ class App < Git::Whistles::App
     else
       attrs = {
         update: {
-          assignee: [{
-                       set: {
-                         name: @username
-                       }
-                     }],
-          comment: [{
-                      add: {
-                        body: "Created branch #{branch_name}"
-                      }
-                    }]
+          assignee: [
+            {
+              set: {
+                name: @username
+              }
+            }
+          ],
+          comment: [
+            {
+              add: {
+                body: "Created branch #{branch_name}"
+              }
+            }
+          ]
         }
       }
       issue.save!(attrs)
@@ -130,14 +138,14 @@ class App < Git::Whistles::App
     end
   end
 
-  def get_jira_info(story_id)
+  def get_jira_info(issue_id)
     @username = `git config jira.username`.strip
     if @username.empty?
       puts Term::ANSIColor.yellow %Q{
-        Your branch appears to have a story ID,
+        Your branch appears to have a issue ID,
         but I don't know your JIRA username!
         Please set it with:
-        $ git config [--global] jira.username <token>
+        $ git config [--global] jira.username <username>
       }
       die "Aborting."
     end
@@ -145,7 +153,7 @@ class App < Git::Whistles::App
     password = `git config jira.password`.strip
     if password.empty?
       puts Term::ANSIColor.yellow %Q{
-        Your branch appears to have a story ID,
+        Your branch appears to have a issue ID,
         but I don't know your JIRA password!
         Please set it with:
         $ git config [--global] jira.password <password>
@@ -156,14 +164,14 @@ class App < Git::Whistles::App
     site = `git config jira.site`.strip
     if site.empty?
       puts Term::ANSIColor.yellow %Q{
-        Your branch appears to have a story ID,
+        Your branch appears to have a issue ID,
         but I don't know your JIRA site!
         Please set it with:
         $ git config [--global] jira.site <https://mydomain.atlassian.net>
       }
       die "Aborting."
     end
-    log.info "Finding your project and story¬"
+    log.info "Finding your JIRA Issue¬"
 
     options = {
       username: @username,
@@ -175,17 +183,17 @@ class App < Git::Whistles::App
     }
 
     client = JIRA::Client.new(options)
-    issue = client.Issue.find(story_id)
+    issue = client.Issue.find(issue_id)
 
     log.info '.'
 
-    log.info "Found story #{story_id} in '#{issue.fields['project']['name']}'"
+    log.info "Found issue #{issue_id} in '#{issue.fields['project']['name']}'"
 
     issue
   rescue => e
     log.info e.message
 
-    log.warn "Apologies... I could not find story #{story_id}."
+    log.warn "Apologies... I could not find issue #{issue_id}."
     exit 1
   end
 
