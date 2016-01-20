@@ -148,17 +148,27 @@ class App < Git::Whistles::App
         Your branch appears to have a story ID,
         but I don't know your JIRA password!
         Please set it with:
-        $ git config [--global] jira.password <token>
+        $ git config [--global] jira.password <password>
       }
       die "Aborting."
     end
 
+    site = `git config jira.site`.strip
+    if site.empty?
+      puts Term::ANSIColor.yellow %Q{
+        Your branch appears to have a story ID,
+        but I don't know your JIRA site!
+        Please set it with:
+        $ git config [--global] jira.site <https://mydomain.atlassian.net>
+      }
+      die "Aborting."
+    end
     log.info "Finding your project and story¬"
 
     options = {
       username: @username,
       password: password,
-      site: 'https://deliveroo.atlassian.net',
+      site: site,
       context_path: '',
       auth_type: :basic,
       read_timeout: 120
