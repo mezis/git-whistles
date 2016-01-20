@@ -23,6 +23,7 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency "pivotal-tracker", "~> 0.5.6"
   gem.add_dependency "term-ansicolor"
+  gem.add_dependency "jira-ruby"
 
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
