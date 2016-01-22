@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    git-whistles (0.12.0)
+    git-whistles (1.0.0)
       jira-ruby
       pivotal-tracker (~> 0.5.6)
       term-ansicolor
@@ -32,9 +32,9 @@ GEM
     method_source (0.8.2)
     mime-types (2.99)
     mini_portile2 (2.0.0)
-    minitest (5.8.3)
+    minitest (5.8.4)
     netrc (0.11.0)
-    nokogiri (1.6.7.1)
+    nokogiri (1.6.7.2)
       mini_portile2 (~> 2.0.0.rc2)
     nokogiri-happymapper (0.5.9)
       nokogiri (~> 1.5)
