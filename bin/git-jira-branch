@@ -2,12 +2,12 @@
 # encoding: UTF-8
 #
 # git-jira-branch
-# 
+#
 #   Suggest a branch name from the given JIRA issue ID
-# 
+#
 #   Assumes the branches are named as:
 #   <issue-id>-<branch-title>
-# 
+#
 require 'rubygems'
 require 'optparse'
 require 'jira'
@@ -61,57 +61,19 @@ class App < Git::Whistles::App
     # create branch
     `cd #{ENV['PWD']} && git checkout -b #{branch_name}`
 
-    # comment and start on PT
     # issue.notes.create :text => "Created branch #{branch_name}"
     # issue.update :current_state => 'started'
+    attrs = {
+      update: {
+        comment: [ { add: { body: "Created branch #{branch_name}" } } ],
+        assignee: [ { set: { name: username } } ]
+      }
+    }
+    issue.save!(attrs)
 
     if transition
-      # Seems we need to do this in two updates.  JIRA complained if we tried to transition and update fields.
-      attrs = {
-        update: {
-          comment: [
-            {
-              add: {
-                body: "Created branch #{branch_name}"
-              }
-            }
-          ],
-          assignee: [
-            {
-              set: {
-                name: @username
-              }
-            }
-          ]
-        }
-      }
-      issue.save!(attrs)
-      attrs = {
-        transition: {
-          id: transition
-        }
-      }
+      attrs = { transition: { id: transition } }
       issue.client.post("#{issue.url}/transitions", attrs.to_json)
-    else
-      attrs = {
-        update: {
-          assignee: [
-            {
-              set: {
-                name: @username
-              }
-            }
-          ],
-          comment: [
-            {
-              add: {
-                body: "Created branch #{branch_name}"
-              }
-            }
-          ]
-        }
-      }
-      issue.save!(attrs)
     end
 
     puts Term::ANSIColor.green('Created branch and started JIRA issue')
@@ -138,9 +100,12 @@ class App < Git::Whistles::App
     end
   end
 
+  def username
+    @username ||= `git config jira.username`.strip
+  end
+
   def get_jira_info(issue_id)
-    @username = `git config jira.username`.strip
-    if @username.empty?
+    if username.empty?
       puts Term::ANSIColor.yellow %Q{
         Your branch appears to have a issue ID,
         but I don't know your JIRA username!
@@ -174,7 +139,7 @@ class App < Git::Whistles::App
     log.info "Finding your JIRA Issue¬"
 
     options = {
-      username: @username,
+      username: username,
       password: password,
       site: site,
       context_path: '',
@@ -186,7 +151,6 @@ class App < Git::Whistles::App
     issue = client.Issue.find(issue_id)
 
     log.info '.'
-
     log.info "Found issue #{issue_id} in '#{issue.fields['project']['name']}'"
 
     issue
@@ -196,7 +160,6 @@ class App < Git::Whistles::App
     log.warn "Apologies... I could not find issue #{issue_id}."
     exit 1
   end
-
 
 end
 

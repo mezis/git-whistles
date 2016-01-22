@@ -15,6 +15,8 @@ Install with:
 
 `git ff-all-branches [-f] [-p] [-v]` - Fast-forward all local tracking branches to their remote counterpart (where possible). Very useful on big projects.
 
+`git jira-branch <issue-id>` - Creates a branch name suggestion from the specified JIRA issue ID. It also writes the branch name as a comment on the issue and allows to transition the issue.
+
 `git latest-pushes [-n NR_RESULTS] [-p PATTERN]` - Show latest pushed branches to origin. Defaults to 20 results. Pattern is appended to refs/remotes/origin/ so include the team or project name to filter results.
 
 `git list-branches [-l] [-r] [-i integration-branch]` - Colourful listing of all local or origin branches, and their distance to an integration branch (`master` by default).
@@ -23,7 +25,7 @@ Install with:
 
 `git outstanding-features [-f from-branch] [-t to-branch] [--oneline]` - List the pull requests merged in `[to-branch]` but not in `[from-branch]`. Useful to prepare a list of stuff you're going to deploy. Defaults to listing what's on `origin/master` but not on `origin/production`. By default lists one feature per line, if `--oneline` or `-o` is specified features will be separated by spaces instead.
 
-`git pivotal-branch <story-id>` - Creates a branch name suggestion from the specified Pivotal Tracker story ID. It also comments on the story the branch name created and starts the story.
+`git pivotal-branch <story-id>` - Creates a branch name suggestion from the specified Pivotal Tracker story ID. It also starts the story and writes the branch name as a comment.
 
 `git pivotal-open <story-id>` - Opens the Pivotal Tracker story page for the current branch, from the specified Pivotal Tracker story ID or it is inferred from the branch name if not supplied
 
@@ -56,10 +58,21 @@ Add this to .gitattributes:
     *.po   merge=pofile
     *.pot  merge=pofile
 
-### pivotal
+### JIRA
 
-All pivotal commands require a proper Pivotal Tracker token. This token can be generated on your account and to set up 
-locally do:
+All JIRA commands require a JIRA username, password and site. Please use the following commands
+to set it up:
+
+```
+$ git config [--global] jira.username <username>
+$ git config [--global] jira.password <password>
+$ git config [--global] jira.site <https://mydomain.atlassian.net>
+```
+
+### Pivotal
+
+All pivotal commands require a Pivotal Tracker token. The token needs to be generated on
+the Pivotal Tracker UI. The token can then be set locally via the following command:
 
 ```
 $ git config [--global] pivotal-tracker.token <token>
