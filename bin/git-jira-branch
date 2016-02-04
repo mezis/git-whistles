@@ -14,8 +14,10 @@ require 'jira'
 require 'readline'
 require 'term/ansicolor'
 require 'git-whistles/app'
+require 'git-whistles/jira'
 
 class App < Git::Whistles::App
+  include Git::Whistles::Jira
 
   def initialize
     super
@@ -34,7 +36,7 @@ class App < Git::Whistles::App
     # get JIRA Issue info
     issue = get_jira_info(issue_id)
 
-    branch_name_suggested = "#{issue_id.upcase}-#{issue.fields['summary'].downcase}"
+    branch_name_suggested = "#{issue_id.upcase}/#{issue.fields['summary'].downcase}"
     branch_name_suggested.gsub!(/[^\w\d\/]/, '-').gsub!(/-+/, '-')
 
     puts 'The suggested branch name is: ' << Term::ANSIColor.yellow(branch_name_suggested)
@@ -139,50 +141,21 @@ class App < Git::Whistles::App
   end
 
   def get_jira_info(issue_id)
-    @username = `git config jira.username`.strip
-    if @username.empty?
-      puts Term::ANSIColor.yellow %Q{
-        Your branch appears to have a issue ID,
-        but I don't know your JIRA username!
-        Please set it with:
-        $ git config [--global] jira.username <username>
-      }
-      die "Aborting."
-    end
+    @config = get_config
+    @username = @config[:username]
 
-    password = `git config jira.password`.strip
-    if password.empty?
-      puts Term::ANSIColor.yellow %Q{
-        Your branch appears to have a issue ID,
-        but I don't know your JIRA password!
-        Please set it with:
-        $ git config [--global] jira.password <password>
-      }
-      die "Aborting."
-    end
-
-    site = `git config jira.site`.strip
-    if site.empty?
-      puts Term::ANSIColor.yellow %Q{
-        Your branch appears to have a issue ID,
-        but I don't know your JIRA site!
-        Please set it with:
-        $ git config [--global] jira.site <https://mydomain.atlassian.net>
-      }
-      die "Aborting."
-    end
     log.info "Finding your JIRA Issue¬"
 
     options = {
       username: @username,
-      password: password,
-      site: site,
+      password: @config[:password],
+      site: @config[:site],
       context_path: '',
       auth_type: :basic,
       read_timeout: 120
     }
 
-    client = JIRA::Client.new(options)
+    client = get_client(options)
     issue = client.Issue.find(issue_id)
 
     log.info '.'
