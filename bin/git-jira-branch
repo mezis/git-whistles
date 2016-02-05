@@ -17,10 +17,11 @@ require 'git-whistles/app'
 require 'git-whistles/jira'
 
 class App < Git::Whistles::App
-  include Git::Whistles::Jira
 
   def initialize
     super
+
+    @client = Git::Whistles::Jira.new
   end
 
   def main(args)
@@ -141,22 +142,9 @@ class App < Git::Whistles::App
   end
 
   def get_jira_info(issue_id)
-    @config = get_config
-    @username = @config[:username]
-
     log.info "Finding your JIRA Issue¬"
 
-    options = {
-      username: @username,
-      password: @config[:password],
-      site: @config[:site],
-      context_path: '',
-      auth_type: :basic,
-      read_timeout: 120
-    }
-
-    client = get_client(options)
-    issue = client.Issue.find(issue_id)
+    issue = @client.Issue.find(issue_id)
 
     log.info '.'
 
