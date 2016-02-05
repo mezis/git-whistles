@@ -21,7 +21,8 @@ class App < Git::Whistles::App
   def initialize
     super
 
-    @client = Git::Whistles::Jira.new
+    @jira = Git::Whistles::Jira.new
+    @client = @jira.get_client
   end
 
   def main(args)
@@ -82,7 +83,7 @@ class App < Git::Whistles::App
           assignee: [
             {
               set: {
-                name: @username
+                name: @jira.username
               }
             }
           ]
@@ -101,7 +102,7 @@ class App < Git::Whistles::App
           assignee: [
             {
               set: {
-                name: @username
+                name: @jira.username
               }
             }
           ],

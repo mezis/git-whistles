@@ -24,7 +24,7 @@ class App < Git::Whistles::App
   def initialize
     super
 
-    @client = Git::Whistles::Jira.new
+    @client = Git::Whistles::Jira.new.get_client
   end
 
   def main(args)
