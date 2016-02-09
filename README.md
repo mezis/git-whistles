@@ -7,27 +7,35 @@ Install with:
 
     gem install git-whistles
 
-Use it with:
+### Commands available:
 
+`git chop [branch1, ...]` - Deletes the local and origin copy of a branch. Useful to close feature branches once a feature is completed. It also accepts multiple branches separated by spaces
 
-| Command | Description|
-|---------|------------|
-| `git ff-all-branches [-f] [-p] [-v]`  | Fast-forward all local tracking branches to their remote counterpart (where possible). Very useful on big projects. |
-| `git stash-and-checkout [branch]`     | As the name implies: stash and checkout another branch. |
-| `git pivotal-pr [--from your-branch] [--to target-branch]` | Open your browser at a Github pull-request page for the specified branch (defaults to the current `head`). If you're using Pivotal Tracker and your branch has a story number in its name, populates your pull request with story details. (Aliased to `git pull-request` to be compatible with previous versions) |
-| `git outstanding-features [-f from-branch] [-t to-branch] [--oneline]` | List the pull requests merged in `[to-branch]` but not in `[from-branch]`. Useful to prepare a list of stuff you're going to deploy. Defaults to listing what's on `origin/master` but not on `origin/production`. By default lists one feature per line, if `--oneline` or `-o` is specified features will be separated by spaces instead. [[PedroCunha](https://github.com/PedroCunha)] |
-| `git chop [branch ...]` | Deletes the local and origin copy of a branch. Useful to close feature branches once a feature is completed. It also accepts multiple branches separated by spaces [[David Silva](https://github.com/Davidslv)] |
-| `git list-branches [-l] [-r] [-i integration-branch]` | Colourful listing of all local or origin branches, and their distance to an integration branch (`master` by default). |
-| `git merge-po <ancestor> <left> <right>` | Merge engine for GetText PO files. |
-| `git select <story-id> [-p PREFIX]`                  | Checkout a local branch with the matching number. If not found, lists remote branches. With -p you can add a prefix to your local branch name.  |
-| `git latest-pushes [-n NR_RESULTS] [-p PATTERN]` | Show latest pushed branches to origin. Defaults to 20 results. Pattern is appended to refs/remotes/origin/ so include the team or project name to filter results. [[PedroCunha](https://github.com/PedroCunha)] |
-| `git pivotal-branch <story-id>` | Creates a branch name suggestion from the specified Pivotal Tracker story ID. It also comments on the story the branch name created and starts the story [[dncrht](https://github.com/dncrht)] |
-| `git pivotal-open [story-id]` | Opens the Pivotal Tracker story page for the current branch, from the specified Pivotal Tracker story ID or it is inferred from the branch name if not supplied [[khiet](https://github.com/khiet)] |
-| `git explore [-r REF] [-p PATH]` | Opens the remote origin interface on the given reference and path. Reference defaults to current branch and path to root [[PedroCunha](https://github.com/pedrocunha)]|
+`git explore [-r REF] [-p PATH]` - Opens the remote origin interface on the given reference and path. Reference defaults to current branch and path to root
 
+`git ff-all-branches [-f] [-p] [-v]` - Fast-forward all local tracking branches to their remote counterpart (where possible). Very useful on big projects.
+
+`git jira-branch <issue-id>` - Creates a branch name suggestion from the specified JIRA issue ID. It also writes the branch name as a comment on the issue and allows to transition the issue.
+
+`git latest-pushes [-n NR_RESULTS] [-p PATTERN]` - Show latest pushed branches to origin. Defaults to 20 results. Pattern is appended to refs/remotes/origin/ so include the team or project name to filter results.
+
+`git list-branches [-l] [-r] [-i integration-branch]` - Colourful listing of all local or origin branches, and their distance to an integration branch (`master` by default).
+
+`git merge-po <ancestor> <left> <right>` - Merge engine for GetText PO files.
+
+`git outstanding-features [-f from-branch] [-t to-branch] [--oneline]` - List the pull requests merged in `[to-branch]` but not in `[from-branch]`. Useful to prepare a list of stuff you're going to deploy. Defaults to listing what's on `origin/master` but not on `origin/production`. By default lists one feature per line, if `--oneline` or `-o` is specified features will be separated by spaces instead.
+
+`git pivotal-branch <story-id>` - Creates a branch name suggestion from the specified Pivotal Tracker story ID. It also starts the story and writes the branch name as a comment.
+
+`git pivotal-open <story-id>` - Opens the Pivotal Tracker story page for the current branch, from the specified Pivotal Tracker story ID or it is inferred from the branch name if not supplied
+
+`git pivotal-pr [--from your-branch] [--to target-branch]` - Open your browser at a Github pull-request page for the specified branch (defaults to the current `head`). If you're using Pivotal Tracker and your branch has a story number in its name, populates your pull request with story details, else it just creates an empty Pull Request from the current HEAD.
+
+`git select <story-id> [-p PREFIX] [-r REMOTE_REF]` - Checkout a local branch with the matching number. If not found, lists remote branches. With `-p` you can add a prefix to your local branch name. The `-r` options allows to checkout a branch in remote if you don't have a local branch with that number.
+
+`git stash-and-checkout [branch]` - Stash and checkout another branch.
 
 ### More details on some of the commands
-
 
 #### merge-po
 
@@ -50,19 +58,25 @@ Add this to .gitattributes:
     *.po   merge=pofile
     *.pot  merge=pofile
 
+### JIRA
 
-#### stash-and-checkout
+All JIRA commands require a JIRA username, password and site. Please use the following commands
+to set it up:
 
-`git stash-and-checkout [branch]`
+```
+$ git config [--global] jira.username <username>
+$ git config [--global] jira.password <password>
+$ git config [--global] jira.site <https://mydomain.atlassian.net>
+```
 
-As the name implies: stash and checkout another branch.
-If there was work in progress previously stashes for the target branch, it gets
-unstashed.
+### Pivotal
 
-This lets you keep work in progress on multiple branches without committing it.
+All pivotal commands require a Pivotal Tracker token. The token needs to be generated on
+the Pivotal Tracker UI. The token can then be set locally via the following command:
 
-I tend to alias this to `git co`.
-
+```
+$ git config [--global] pivotal-tracker.token <token>
+```
 
 ### License
 
