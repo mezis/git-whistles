@@ -17,6 +17,8 @@ Install with:
 
 `git jira-branch <issue-id>` - Creates a branch name suggestion from the specified JIRA issue ID. It also writes the branch name as a comment on the issue and allows to transition the issue.
 
+`git jira-pr [--from your-branch] [--to target-branch]` - Open your browser at a Github pull-request page for the specified branch (defaults to the current `head`). If you're using JIRA and your branch has a issue id in its name, populates your pull request with that issue details, else it just creates an empty Pull Request from the current HEAD.
+
 `git latest-pushes [-n NR_RESULTS] [-p PATTERN]` - Show latest pushed branches to origin. Defaults to 20 results. Pattern is appended to refs/remotes/origin/ so include the team or project name to filter results.
 
 `git list-branches [-l] [-r] [-i integration-branch]` - Colourful listing of all local or origin branches, and their distance to an integration branch (`master` by default).
