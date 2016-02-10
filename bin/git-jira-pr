@@ -52,7 +52,7 @@ class App < Git::Whistles::App
     title = options.from.split('/').last.split(/[_-]/).delete_if { |word| word =~ /^\d+$/ }.join(' ').capitalize
     query[:"pull_request[title]"] = team ? "#{team}: #{title}" : title
 
-    # add Pivotal infos
+    # add Jira infos
     add_jira_info(query, "#{team}-#{issue_id}".upcase) if issue_id =~ /(\d+)$/
 
     query_string = query.map { |key,value|
@@ -79,7 +79,7 @@ class App < Git::Whistles::App
 
   def option_parser
     @option_parser ||= OptionParser.new do |op|
-      op.banner = "Usage: git pivotal-pr [options]"
+      op.banner = "Usage: git jira-pr [options]"
 
       op.on("-f", "--from YOUR_BRANCH", "Branch to issue pull request for [head]") do |v|
         options.from = v
