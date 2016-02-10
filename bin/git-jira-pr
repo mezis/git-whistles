@@ -1,0 +1,164 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+#
+# git-jira-pr --
+#
+#   Open a pull request for the current branch in your default browser
+#
+#   Assumes the branches are named
+#   <team>/<branch-title>-<story-id>
+#
+require 'rubygems'
+require 'jira'
+require 'optparse'
+require 'cgi'
+require 'term/ansicolor'
+require 'git-whistles/app'
+require 'git-whistles/jira'
+
+class App < Git::Whistles::App
+
+  BROWSERS               = %w(xdg-open open firefox iceweasel)
+  SAFE_QUERY_STRING_SIZE = 8000
+
+  def initialize
+    super
+
+    @client = Git::Whistles::Jira.new.get_client
+  end
+
+  def main(args)
+    super
+    parse_args!(args)
+
+    if args.count > 0
+      die "Too many arguments", :usage => true
+    end
+
+    if options.from == options.to
+      die "You cannot issue a pull request to the same branch (#{options.from})."
+    end
+
+    query = { }
+
+    # guess team name
+    if options.from =~ %r{^(\w+-\w+)/.*}
+      team, issue_id = $1.capitalize.split('-')
+    else
+      issue_id = team = nil
+    end
+
+    # guess title.
+    title = options.from.split('/').last.split(/[_-]/).delete_if { |word| word =~ /^\d+$/ }.join(' ').capitalize
+    query[:"pull_request[title]"] = team ? "#{team}: #{title}" : title
+
+    # add Jira infos
+    add_jira_info(query, "#{team}-#{issue_id}".upcase) if issue_id =~ /(\d+)$/
+
+    query_string = query.map { |key,value|
+      "#{CGI.escape key.to_s}=#{CGI.escape value}"
+    }.join('&')
+    url = "https://github.com/#{repo}/compare/#{options.to}...#{options.from}?#{query_string}"
+
+    puts "Preparing a pull request for branch #{options.from}"
+
+    unless launch_browser(url)
+      log.warn "Sorry, I don't know how to launch a web browser on your system. You can open it yourself and paste this URL:\n#{url}"
+    end
+  end
+
+  private
+
+  def defaults
+    {
+      :from   => run!('git symbolic-ref HEAD').strip.gsub(%r(^refs/heads/), ""),
+      :to     => 'master',
+      :remote => 'origin'
+    }
+  end
+
+  def option_parser
+    @option_parser ||= OptionParser.new do |op|
+      op.banner = "Usage: git jira-pr [options]"
+
+      op.on("-f", "--from YOUR_BRANCH", "Branch to issue pull request for [head]") do |v|
+        options.from = v
+      end
+
+      op.on("-to", "--to UPSTREAM_BRANCH", "Branch into which you want your code merged [master]") do |v|
+        options.to = v
+      end
+
+      op.on("-r", "--remote NAME", "The remote you're sending this to [origin]") do |v|
+        options.to = v
+      end
+    end
+  end
+
+  def origin_url
+    @origin_url ||= begin
+      run!("git config --get remote.#{options.remote}.url").strip.tap do |url|
+        url =~ /github\.com/ or die "origin does not have a Github URL !"
+      end
+    end
+  end
+
+  def repo
+    @repo ||= origin_url.sub(/.*github\.com[\/:]/,'').sub(/\.git$/,'')
+  end
+
+  def add_jira_info(query, issue_id)
+    log.info "Finding your Jira Issue¬"
+
+    issue = @client.Issue.find(issue_id)
+    log.info '.'
+
+    if issue.nil?
+      log.warn "Apologies... I could not find issue #{issue_id}."
+      return
+    end
+
+    log.info "Found story #{issue_id} in '#{issue.fields['project']['name']}'"
+
+    title       = "#{issue_id}: #{issue.summary}"
+    headline    = "Jira story [##{issue_id}](#{@client.options[:site]}/browse/#{issue_id}) in project *#{issue.project.name}*:"
+    description = issue.description.split("\n").map do |line|
+      (1..6).each { |i| line.gsub!(/(h#{i}.)/, '#' * i) }
+      line.gsub!(/({{)|(}})/, '`')
+      "> #{line}"
+    end.join("\n")
+
+    query.merge! subject: issue.summary, :"pull_request[title]" => title
+
+    if (headline.length + description.length) > SAFE_QUERY_STRING_SIZE
+      log.warn "Oops looks like your story body exceeds maximum allowed caracters to send a github request"
+      log.warn "Please copy the info below to your pull request body:"
+      puts
+      puts headline
+      puts
+      puts
+      puts description
+      puts
+      puts
+      puts "Press any key to continue..."
+      gets
+      query.merge! :"pull_request[body]" => "Please check your command line for the story body"
+    else
+      body = "TODO: describe your changes\n\n===\n\n#{headline}\n\n#{description}"
+      query.merge! :"pull_request[body]" => body
+    end
+  end
+
+  def launch_browser(url)
+    BROWSERS.each do |command|
+      next if run("which #{command}").strip.empty?
+      system(command, url) and return true
+    end
+    false
+  end
+
+end
+
+############################################################################
+
+App.run!
