@@ -8,7 +8,7 @@ PROGNAME=$(basename $0)
 
 
 _has_git() {
-  git rev-parse head > /dev/null 2>&1
+  git rev-parse HEAD > /dev/null 2>&1
 }
 
 _check_branches_format() {
@@ -128,7 +128,7 @@ shift $((OPTIND-1))
 
 [ $# -gt 0 ] && _usage && _die "Too many arguments."
 
-_has_git || die "Not in a git repository !"
+_has_git || _die "Not in a git repository !"
 
 : ${porcelain:=no}
 : ${where:=local}
