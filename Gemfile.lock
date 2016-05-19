@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    git-whistles (1.1.0)
+    git-whistles (1.1.1)
       jira-ruby
       pivotal-tracker (~> 0.5.6)
       term-ansicolor
@@ -93,4 +93,4 @@ DEPENDENCIES
   rspec
 
 BUNDLED WITH
-   1.11.2
+   1.12.3
