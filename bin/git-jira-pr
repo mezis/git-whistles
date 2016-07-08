@@ -9,7 +9,7 @@
 #   <team>/<branch-title>-<story-id>
 #
 require 'rubygems'
-require 'jira'
+require 'jira-ruby'
 require 'optparse'
 require 'cgi'
 require 'term/ansicolor'

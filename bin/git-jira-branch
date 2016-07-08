@@ -10,7 +10,7 @@
 #
 require 'rubygems'
 require 'optparse'
-require 'jira'
+require 'jira-ruby'
 require 'readline'
 require 'term/ansicolor'
 require 'git-whistles/app'

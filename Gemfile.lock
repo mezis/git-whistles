@@ -2,14 +2,14 @@ PATH
   remote: .
   specs:
     git-whistles (1.1.1)
-      jira-ruby
+      jira-ruby (~> 1.0.0)
       pivotal-tracker (~> 0.5.6)
       term-ansicolor
 
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (4.2.5.1)
+    activesupport (4.2.6)
       i18n (~> 0.7)
       json (~> 1.7, >= 1.7.7)
       minitest (~> 5.1)
@@ -25,26 +25,28 @@ GEM
     http-cookie (1.0.2)
       domain_name (~> 0.5)
     i18n (0.7.0)
-    jira-ruby (0.1.17)
-      activesupport
-      oauth (~> 0.4.7)
+    jira-ruby (1.0.0)
+      activesupport (~> 4.2, >= 4.2.0)
+      oauth (~> 0.5, >= 0.5.0)
     json (1.8.3)
     method_source (0.8.2)
-    mime-types (2.99)
-    mini_portile2 (2.0.0)
-    minitest (5.8.4)
+    mime-types (2.99.1)
+    mini_portile2 (2.1.0)
+    minitest (5.9.0)
     netrc (0.11.0)
-    nokogiri (1.6.7.2)
-      mini_portile2 (~> 2.0.0.rc2)
+    nokogiri (1.6.8)
+      mini_portile2 (~> 2.1.0)
+      pkg-config (~> 1.1.7)
     nokogiri-happymapper (0.5.9)
       nokogiri (~> 1.5)
-    oauth (0.4.7)
+    oauth (0.5.1)
     pivotal-tracker (0.5.13)
       builder
       crack
       nokogiri (>= 1.5.5)
       nokogiri-happymapper (>= 0.5.4)
       rest-client (>= 1.8.0)
+    pkg-config (1.1.7)
     pry (0.10.1)
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
@@ -93,4 +95,4 @@ DEPENDENCIES
   rspec
 
 BUNDLED WITH
-   1.12.3
+   1.12.5
