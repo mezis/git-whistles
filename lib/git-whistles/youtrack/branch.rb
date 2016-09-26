@@ -30,7 +30,7 @@ module Git::Whistles
         final_branch_name = user_branch_name.empty? ? suggested_branch_name : user_branch_name
         create_branch final_branch_name
 
-        puts Term::ANSIColor.green 'Created branch and started PT story'
+        puts Term::ANSIColor.green 'Created branch'
         true
       end
 
