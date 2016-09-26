@@ -37,6 +37,8 @@ Install with:
 
 `git stash-and-checkout [branch]` - Stash and checkout another branch.
 
+`git youtrack-branch <ticket-id>` - Creates a branch name suggestion from the specified Youtrack ticket ID. 
+
 ### More details on some of the commands
 
 #### merge-po
