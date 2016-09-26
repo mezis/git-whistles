@@ -20,10 +20,13 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "pry"
   gem.add_development_dependency "pry-nav"
   gem.add_development_dependency "rspec"
+  gem.add_development_dependency "webmock"
+  gem.add_development_dependency "vcr"
 
   gem.add_dependency "pivotal-tracker", "~> 0.5.6"
   gem.add_dependency "term-ansicolor"
   gem.add_dependency "jira-ruby", "~> 1.0.0"
+  gem.add_dependency "youtrack", "~> 0.0.11"
 
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }

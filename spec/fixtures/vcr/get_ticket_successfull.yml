@@ -1,0 +1,184 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: http://youtrack.com/rest/user/login
+    body:
+      encoding: UTF-8
+      string: login=alfredo.motta&password=some_password
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Server:
+      - nginx/1.9.5
+      Date:
+      - Thu, 08 Sep 2016 18:20:27 GMT
+      Content-Type:
+      - application/xml;charset=UTF-8
+      Content-Length:
+      - '17'
+      Connection:
+      - keep-alive
+      Set-Cookie:
+      - YTSESSIONID=24bw6qyuglya1pq9p2oh0qtnj;Path=/;HttpOnly
+      - jetbrains.charisma.main.security.PRINCIPAL=ZGM3YzVjNzc4YjkwMWQ2ZmI1OTgwOWQwYzI4MTQ1OGEyNzVhNDFlMWQyOTEwNTNiMzRkZjQ4YmE2ODRiMmUyYjphbGZyZWRvLm1vdHRh;Path=/;Expires=Fri,
+        08-Sep-2017 18:20:27 GMT
+      Expires:
+      - Thu, 01 Jan 1970 00:00:00 GMT
+      Cache-Control:
+      - no-cache, no-store, no-transform, must-revalidate
+      Access-Control-Expose-Headers:
+      - Location
+    body:
+      encoding: UTF-8
+      string: "<login>ok</login>"
+    http_version: 
+  recorded_at: Thu, 08 Sep 2016 18:19:06 GMT
+- request:
+    method: get
+    uri: http://youtrack.com/rest/issue/PIO-338
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Cookie:
+      - YTSESSIONID=24bw6qyuglya1pq9p2oh0qtnj;Path=/;HttpOnly, jetbrains.charisma.main.security.PRINCIPAL=ZGM3YzVjNzc4YjkwMWQ2ZmI1OTgwOWQwYzI4MTQ1OGEyNzVhNDFlMWQyOTEwNTNiMzRkZjQ4YmE2ODRiMmUyYjphbGZyZWRvLm1vdHRh;Path=/;Expires=Fri,
+        08-Sep-2017 18:20:27 GMT
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Server:
+      - nginx/1.9.5
+      Date:
+      - Thu, 08 Sep 2016 18:20:27 GMT
+      Content-Type:
+      - application/xml;charset=UTF-8
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Cache-Control:
+      - no-cache, no-store, no-transform, must-revalidate
+      Access-Control-Expose-Headers:
+      - Location
+    body:
+      encoding: UTF-8
+      string: "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><issue
+        id=\"PIO-338\" entityId=\"75-11159\"><field xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+        xsi:type=\"SingleField\" name=\"projectShortName\"><value>PIO</value></field><field
+        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"SingleField\"
+        name=\"numberInProject\"><value>338</value></field><field xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+        xsi:type=\"SingleField\" name=\"summary\"><value>Header styling changes</value></field><field
+        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"SingleField\"
+        name=\"description\"><value>==Why==\n\nCurrent header is taking a lot of space
+        (white space on top of page) which is being wasted/not used for any purpose.
+        \nWe want to push the form to the top, so it stays over the fold as much as
+        possible.\n\n==What==\n\nApply styling changes as seen on the design.\n. white
+        space disappears\n. \"retrieve application\" moves to the top - font color:white;
+        \ hover text-style:underline;\n. zopa logo sits on top of the blue image.\n.
+        font-weight on progress steps: 600;\n. make sure form is left aligned together
+        with car graphic and step 1 circle.\n. logos attached @1x,@2x\n\n***make sure
+        by changing link style on top right, it doesnt change bottom one. We should
+        have 2 link styles:\n1. white text on dark backgrounds\n2. green text on light
+        backgrounds</value></field><field xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+        xsi:type=\"SingleField\" name=\"created\"><value>1470145056062</value></field><field
+        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"SingleField\"
+        name=\"updated\"><value>1473345934647</value></field><field xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+        xsi:type=\"SingleField\" name=\"updaterName\"><value>Orrin_Ward</value></field><field
+        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"SingleField\"
+        name=\"updaterFullName\"><value>Orrin Ward</value></field><field xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+        xsi:type=\"SingleField\" name=\"reporterName\"><value>natalia.alvarez</value></field><field
+        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"SingleField\"
+        name=\"reporterFullName\"><value>Natalia Alvarez</value></field><field xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+        xsi:type=\"SingleField\" name=\"commentsCount\"><value>12</value></field><field
+        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"SingleField\"
+        name=\"votes\"><value>0</value></field><field xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+        xsi:type=\"LinkField\" name=\"links\"><value type=\"Subtask\" role=\"subtask
+        of\">PIO-287</value></field><field xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+        xsi:type=\"CustomFieldValue\" name=\"Type\"><value>Functional Story</value><valueId>Functional
+        Story</valueId><color><bg>#0066cc</bg><fg>white</fg></color></field><field
+        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"MultiUserField\"
+        name=\"Owner\"><value fullName=\"Natalia Alvarez\">natalia.alvarez</value></field><field
+        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CustomFieldValue\"
+        name=\"State\"><value>Acceptance</value><valueId>Acceptance</valueId><color><bg>#d9ffc8</bg><fg>#000</fg></color></field><field
+        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CustomFieldValue\"
+        name=\"Status\"><value>Ready</value><valueId>Ready</valueId><color><bg>#0066cc</bg><fg>white</fg></color></field><field
+        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CustomFieldValue\"
+        name=\"Size\"><value>2</value><valueId>2</valueId></field><field xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+        xsi:type=\"MultiUserField\" name=\"Assignee\"><value fullName=\"Greg Baker\">greg.baker</value><value
+        fullName=\"Natalia Alvarez\">natalia.alvarez</value></field><field xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+        xsi:type=\"CustomFieldValue\" name=\"Sprint\"><value>Sprint Sixxx</value><value>Sprint
+        Seven</value><value>Sprint Eight</value><valueId>Sprint Sixxx</valueId><valueId>Sprint
+        Seven</valueId><valueId>Sprint Eight</valueId></field><field xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+        xsi:type=\"CustomFieldValue\" name=\"Feature Flag\"><value>No</value><valueId>No</valueId></field><field
+        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CustomFieldValue\"
+        name=\"Squad\"><value>Pioneers</value><valueId>Pioneers</valueId></field><field
+        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CustomFieldValue\"
+        name=\"Estimation\"><value>240</value><valueId>4h</valueId></field><field
+        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CustomFieldValue\"
+        name=\"CombinedBoard\"><value>SharedView</value><valueId>SharedView</valueId></field><field
+        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CustomFieldValue\"
+        name=\"Infosec Signoff\"><value>Not required</value><valueId>Not required</valueId><color><bg>#339933</bg><fg>white</fg></color></field><field
+        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CustomFieldValue\"
+        name=\"Compliance Signoff\"><value>Not required</value><valueId>Not required</valueId><color><bg>#339933</bg><fg>white</fg></color></field><field
+        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CustomFieldValue\"
+        name=\"Risk Signoff\"><value>Not required</value><valueId>Not required</valueId><color><bg>#339933</bg><fg>white</fg></color></field><field
+        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"AttachmentField\"
+        name=\"attachments\"><value id=\"89-3241\" url=\"http://youtrack.zopian.ad.zopa.com/_persistent/header%20changes%402x.png?file=89-3241&amp;v=0&amp;c=true\">header
+        changes@2x.png</value><value id=\"89-3243\" url=\"http://youtrack.zopian.ad.zopa.com/_persistent/ZopaLogo.png?file=89-3243&amp;v=0&amp;c=true\">ZopaLogo.png</value><value
+        id=\"89-3244\" url=\"http://youtrack.zopian.ad.zopa.com/_persistent/ZopaLogo%402x.png?file=89-3244&amp;v=0&amp;c=true\">ZopaLogo@2x.png</value><value
+        id=\"89-3385\" url=\"http://youtrack.zopian.ad.zopa.com/_persistent/header-375%3E%402x.png?file=89-3385&amp;v=0&amp;c=true\">header-375&gt;@2x.png</value></field><comment
+        id=\"88-12408\" author=\"tom.groombridge\" authorFullName=\"Tom Groombridge\"
+        issueId=\"PIO-338\" deleted=\"false\" text=\"can we estimate this? \" shownForIssueAuthor=\"false\"
+        created=\"1470159862211\"><replies/></comment><comment id=\"88-12411\" author=\"natalia.alvarez\"
+        authorFullName=\"Natalia Alvarez\" issueId=\"PIO-338\" deleted=\"false\" text=\"@greg.baker
+        could you please estimate? you ll have a better guess than I\" shownForIssueAuthor=\"false\"
+        created=\"1470212064496\"><replies/></comment><comment id=\"88-12466\" author=\"tom.groombridge\"
+        authorFullName=\"Tom Groombridge\" issueId=\"PIO-338\" deleted=\"false\" text=\"need
+        mobile designs to finish this card off\" shownForIssueAuthor=\"false\" created=\"1470302300253\"
+        updated=\"1470159862199\"><replies/></comment><comment id=\"88-12662\" author=\"alfredo.motta\"
+        authorFullName=\"Alfredo Motta\" issueId=\"PIO-338\" deleted=\"false\" text=\"Why
+        this is not progressing? @natalia.alvarez &#xA;Where is the PR? @tom.groombridge
+        @kate.beavis \" shownForIssueAuthor=\"false\" created=\"1470994574703\"><replies/></comment><comment
+        id=\"88-12664\" author=\"kate.beavis\" authorFullName=\"Kate Beavis\" issueId=\"PIO-338\"
+        deleted=\"false\" text=\"I don't know what is happening with this, I raised
+        it in Hipchat but there was no response, @tom.groombridge should have a better
+        idea than me as he moved it into acceptance\" shownForIssueAuthor=\"false\"
+        created=\"1470994880006\"><replies/></comment><comment id=\"88-12668\" author=\"tom.groombridge\"
+        authorFullName=\"Tom Groombridge\" issueId=\"PIO-338\" deleted=\"false\" text=\"possibly
+        @greg.baker said this was done at the last retro.... Maybe I'm wrong though.\"
+        shownForIssueAuthor=\"false\" created=\"1470995969242\" updated=\"1470302300238\"><replies/></comment><comment
+        id=\"88-13007\" author=\"marie.steinthaler\" authorFullName=\"Marie Steinthaler\"
+        issueId=\"PIO-338\" deleted=\"false\" text=\"@greg.baker what's up with this
+        one? This doesn't seem to be in either sandbox or prod. Let's crush this one,
+        seems easy.\" shownForIssueAuthor=\"false\" created=\"1472055010957\"><replies/></comment><comment
+        id=\"88-13066\" author=\"greg.baker\" authorFullName=\"Greg Baker\" issueId=\"PIO-338\"
+        deleted=\"false\" text=\"we need a mobile design to finish this off. it has
+        been done for web, but the mobile view doesn't look ideal&#xA;\" shownForIssueAuthor=\"false\"
+        created=\"1472131737590\"><replies/></comment><comment id=\"88-13166\" author=\"alfredo.motta\"
+        authorFullName=\"Alfredo Motta\" issueId=\"PIO-338\" deleted=\"false\" text=\"have
+        we pushing this forward then?\" shownForIssueAuthor=\"false\" created=\"1472577102355\"><replies/></comment><comment
+        id=\"88-13216\" author=\"marie.steinthaler\" authorFullName=\"Marie Steinthaler\"
+        issueId=\"PIO-338\" deleted=\"false\" text=\"@natalia.alvarez the guys need
+        a mobile design - can you help please :-) Thanks!\" shownForIssueAuthor=\"false\"
+        created=\"1472660527813\"><replies/></comment><comment id=\"88-13220\" author=\"natalia.alvarez\"
+        authorFullName=\"Natalia Alvarez\" issueId=\"PIO-338\" deleted=\"false\" text=\"@marie.steinthaler
+        mobile version attached\" shownForIssueAuthor=\"false\" created=\"1472717148927\"
+        updated=\"1470212064475\"><replies/></comment><comment id=\"88-13515\" author=\"Orrin_Ward\"
+        authorFullName=\"Orrin Ward\" issueId=\"PIO-338\" deleted=\"false\" text=\"This
+        shouldn't be a &quot;Functional Story&quot; in Acceptance unless there is
+        code, and a PR, in UAT.\" shownForIssueAuthor=\"false\" created=\"1473345934653\"><replies/></comment></issue>"
+    http_version: 
+  recorded_at: Thu, 08 Sep 2016 18:19:06 GMT
+recorded_with: VCR 3.0.3
