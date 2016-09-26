@@ -21,6 +21,8 @@ module Git::Whistles
         end
 
         ticket = get_ticket_from args[0]
+        return false if ticket.nil?
+
         suggested_branch_name = suggested_branch_name_from(ticket)
         print_suggested_branch suggested_branch_name
 

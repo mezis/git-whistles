@@ -1,0 +1,77 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: http://youtrack.com/rest/user/login
+    body:
+      encoding: UTF-8
+      string: login=some_username&password=some_password
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Server:
+      - nginx
+      Date:
+      - Mon, 26 Sep 2016 16:48:12 GMT
+      Content-Type:
+      - text/html
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Vary:
+      - Accept-Encoding
+      Last-Modified:
+      - Mon, 06 Oct 2014 10:16:51 GMT
+      Etag:
+      - W/"1745269-3fe-504be61a22cc6"
+      X-Powered-By:
+      - PleskLin
+    body:
+      encoding: ASCII-8BIT
+      string: |
+        <HTML>
+        <HEAD>
+        <TITLE>404 Not Found</TITLE>
+        <BASE href="/error_docs/"><!--[if lte IE 6]></BASE><![endif]-->
+        </HEAD>
+        <BODY>
+        <H1>Not Found</H1>
+        The requested document was not found on this server.
+        <P>
+        <HR>
+        <ADDRESS>
+        Web Server at youtrack.com
+        </ADDRESS>
+        </BODY>
+        </HTML>
+
+        <!--
+           - Unfortunately, Microsoft has added a clever new
+           - "feature" to Internet Explorer. If the text of
+           - an error's message is "too small", specifically
+           - less than 512 bytes, Internet Explorer returns
+           - its own error message. You can turn that off,
+           - but it's pretty tricky to find switch called
+           - "smart error messages". That means, of course,
+           - that short error messages are censored by default.
+           - IIS always returns error messages that are long
+           - enough to make Internet Explorer happy. The
+           - workaround is pretty simple: pad the error
+           - message with a big comment like this to push it
+           - over the five hundred and twelve bytes minimum.
+           - Of course, that's exactly what you're reading
+           - right now.
+           -->
+    http_version: 
+  recorded_at: Mon, 26 Sep 2016 16:48:55 GMT
+recorded_with: VCR 3.0.3

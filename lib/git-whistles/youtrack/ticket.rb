@@ -3,6 +3,9 @@ module Git::Whistles
     class Ticket
       class << self
         def build_from_remote(ticket_hash)
+          return nil if ticket_hash.nil?
+          return nil if issue_not_found? ticket_hash
+
           self.new.tap do |ticket|
             ticket.title = title_from ticket_hash
             ticket.id = id_from ticket_hash
@@ -37,6 +40,14 @@ module Git::Whistles
             dig('issue', 'field').
             select { |f| f['name'] == 'description'  }.
             first.dig('value')
+        end
+
+        def issue_not_found? ticket_hash
+          if ticket_hash["error"]
+            true
+          else
+            false
+          end
         end
       end
 

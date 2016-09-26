@@ -1,26 +1,13 @@
 require 'youtrack'
 require_relative 'ticket'
+require 'term/ansicolor'
 
 module Git::Whistles
   module Youtrack
     class Api
       def get_ticket(id)
-        Ticket.build_from_remote(issues.find(id))
-      end
-
-      def issues
-        @issues ||= client.issues
-      end
-
-      def client
-        @client ||= ::Youtrack::Client.new do |c|
-          c.url = url
-          c.login = username
-          c.password = password
-        end
-
-        @client.connect! unless @client.connected?
-        @client
+        ticket_hash = find_issue(id)
+        Ticket.build_from_remote(ticket_hash)
       end
 
       def username
@@ -32,7 +19,6 @@ module Git::Whistles
             Please set it with:
             $ git config [--global] youtrack.username <username>
           }
-          die "Aborting."
         end
 
         username
@@ -47,7 +33,6 @@ module Git::Whistles
             Please set it with:
             $ git config [--global] youtrack.password <password>
           }
-          die "Aborting."
         end
 
         password
@@ -66,6 +51,29 @@ module Git::Whistles
         end
 
         url
+      end
+
+      private
+
+      def issues
+        @issues ||= client.issues
+      end
+
+      def client
+        @client ||= ::Youtrack::Client.new do |c|
+          c.url = url
+          c.login = username
+          c.password = password
+        end
+
+        @client.connect! unless @client.connected?
+        @client
+      end
+
+      def find_issue id
+        issues.find(id)
+      rescue => e
+        nil
       end
     end
   end
