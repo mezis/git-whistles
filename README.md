@@ -59,6 +59,21 @@ Add this to .gitattributes:
 
     *.po   merge=pofile
     *.pot  merge=pofile
+    
+Or, if you want to make this setting global:
+
+Create a user global file ~/.gitattributes and fill it with:
+
+    *.po   merge=pofile
+    *.pot  merge=pofile
+
+Add this to your user global ~/.gitconfig:
+
+    [core]
+      attributesfile = ~/.gitattributes
+    [merge "pofile"]
+      name = Gettext merge driver
+      driver = git merge-po %O %A %B
 
 ### JIRA
 
