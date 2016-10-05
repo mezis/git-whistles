@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Three-way merge driver for PO files
 #
