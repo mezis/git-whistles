@@ -14,35 +14,35 @@ module Git::Whistles
           end
         end
 
-        def title_from ticket_hash
-          ticket_hash.
-            dig('issue', 'field').
-            select { |f| f['name'] == 'summary'  }.
-            first.dig('value')
+        def title_from(ticket_hash)
+          ticket_hash
+            .dig('issue', 'field')
+            .select { |f| f['name'] == 'summary' }
+            .first.dig('value')
         end
 
-        def id_from ticket_hash
-          ticket_hash.
-            dig('issue', 'field').
-            select { |f| f['name'] == 'numberInProject'  }.
-            first.dig('value').to_i
+        def id_from(ticket_hash)
+          ticket_hash
+            .dig('issue', 'field')
+            .select { |f| f['name'] == 'numberInProject' }
+            .first.dig('value').to_i
         end
 
-        def project_from ticket_hash
-          ticket_hash.
-            dig('issue', 'field').
-            select { |f| f['name'] == 'projectShortName'  }.
-            first.dig('value')
+        def project_from(ticket_hash)
+          ticket_hash
+            .dig('issue', 'field')
+            .select { |f| f['name'] == 'projectShortName' }
+            .first.dig('value')
         end
 
-        def description_from ticket_hash
-          ticket_hash.
-            dig('issue', 'field').
-            select { |f| f['name'] == 'description'  }.
-            first.dig('value')
+        def description_from(ticket_hash)
+          ticket_hash
+            .dig('issue', 'field')
+            .select { |f| f['name'] == 'description' }
+            .first.dig('value')
         end
 
-        def issue_not_found? ticket_hash
+        def issue_not_found?(ticket_hash)
           if ticket_hash["error"]
             true
           else

@@ -16,12 +16,15 @@ module Git::Whistles
 
         parse_args!(args)
         if args.count < 1
-          puts usage
+          puts Term::ANSIColor.yellow usage
           return false
         end
 
         ticket = get_ticket_from args[0]
-        return false if ticket.nil?
+        if ticket.nil?
+          die "Could not find ticket #{args[0]}"
+          return false
+        end
 
         suggested_branch_name = suggested_branch_name_from(ticket)
         print_suggested_branch suggested_branch_name
@@ -43,7 +46,7 @@ module Git::Whistles
       end
 
       def get_ticket_from ticket_id
-        youtrack_client.get_ticket ticket_id
+        youtrack_client.find_ticket ticket_id
       end
 
       def youtrack_client

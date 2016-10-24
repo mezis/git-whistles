@@ -1,6 +1,5 @@
 require 'spec_helper'
-require 'pry'
-require_relative '../../../../lib/git-whistles/youtrack/branch'
+require 'git-whistles/youtrack/branch'
 
 RSpec.describe Git::Whistles::Youtrack::Branch do
   describe '#main' do
@@ -8,7 +7,7 @@ RSpec.describe Git::Whistles::Youtrack::Branch do
 
     context 'with no arguments' do
       it 'prints an error message' do
-        expect(subject).to receive(:puts).with("Usage: git youtrack-branch YOUTRACK_STORY_ID")
+        expect(subject).to receive(:puts).with("\e[33mUsage: git youtrack-branch YOUTRACK_STORY_ID\e[0m")
 
         subject.main([])
       end
@@ -27,7 +26,7 @@ RSpec.describe Git::Whistles::Youtrack::Branch do
         expect(subject).to receive(:puts).at_least(:once)
       end
 
-      let(:youtrack_api) { double(get_ticket: ticket) }
+      let(:youtrack_api) { double(find_ticket: ticket) }
       let(:ticket_id) { "338" }
       let(:ticket) do
         Git::Whistles::Youtrack::Ticket.new.tap do |ticket|

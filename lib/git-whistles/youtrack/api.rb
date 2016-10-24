@@ -5,7 +5,7 @@ require 'term/ansicolor'
 module Git::Whistles
   module Youtrack
     class Api
-      def get_ticket(id)
+      def find_ticket(id)
         ticket_hash = find_issue(id)
         Ticket.build_from_remote(ticket_hash)
       end
@@ -47,7 +47,6 @@ module Git::Whistles
             Please set it with:
             $ git config [--global] youtrack.url <https://mydomain.youtrack.net>
           }
-          die "Aborting."
         end
 
         url
@@ -72,7 +71,7 @@ module Git::Whistles
 
       def find_issue id
         issues.find(id)
-      rescue => e
+      rescue
         nil
       end
     end

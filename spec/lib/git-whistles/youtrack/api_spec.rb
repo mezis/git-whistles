@@ -1,8 +1,7 @@
 require 'spec_helper'
-require 'pry'
 require 'webmock'
-require 'vcr'
-require_relative '../../../../lib/git-whistles/youtrack/api'
+require_relative '../../../support/vcr_helper'
+require 'git-whistles/youtrack/api'
 
 describe Git::Whistles::Youtrack::Api do
   before do
@@ -31,11 +30,11 @@ describe Git::Whistles::Youtrack::Api do
     end
   end
 
-  describe '#get_ticket' do
+  describe '#find_ticket' do
     context 'when successfull' do
       it 'returns a ticket with title' do
         VCR.use_cassette('get_ticket_successfull') do
-          ticket = subject.get_ticket('PIO-338')
+          ticket = subject.find_ticket('PIO-338')
 
           expect(ticket.title).to eq("Header styling changes")
         end
@@ -43,7 +42,7 @@ describe Git::Whistles::Youtrack::Api do
 
       it 'returns a ticket with id' do
         VCR.use_cassette('get_ticket_successfull') do
-          ticket = subject.get_ticket('PIO-338')
+          ticket = subject.find_ticket('PIO-338')
 
           expect(ticket.id).to eq(338)
         end
@@ -51,7 +50,7 @@ describe Git::Whistles::Youtrack::Api do
 
       it 'returns a ticket project name' do
         VCR.use_cassette('get_ticket_successfull') do
-          ticket = subject.get_ticket('PIO-338')
+          ticket = subject.find_ticket('PIO-338')
 
           expect(ticket.project).to eq("PIO")
         end
@@ -59,7 +58,7 @@ describe Git::Whistles::Youtrack::Api do
 
       it 'returns a ticket description' do
         VCR.use_cassette('get_ticket_successfull') do
-          ticket = subject.get_ticket('PIO-338')
+          ticket = subject.find_ticket('PIO-338')
 
           expect(ticket.description).to include("==Why==")
         end
@@ -69,7 +68,7 @@ describe Git::Whistles::Youtrack::Api do
     context 'when ticket not found' do
       it 'returns nil' do
         VCR.use_cassette('get_ticket_not_found') do
-          ticket = subject.get_ticket('non-existent')
+          ticket = subject.find_ticket('non-existent')
 
           expect(ticket).to be_nil
         end
@@ -79,7 +78,7 @@ describe Git::Whistles::Youtrack::Api do
     context 'when authentication fails' do
       it 'returns nil' do
         VCR.use_cassette('get_ticket_auth_failure') do
-          ticket = subject.get_ticket('PIO-338')
+          ticket = subject.find_ticket('PIO-338')
 
           expect(ticket).to be_nil
         end
@@ -99,7 +98,7 @@ describe Git::Whistles::Youtrack::Api do
         expect(subject).to receive(:puts).with "warning for user"
 
         VCR.use_cassette('get_ticket_auth_failure') do
-          ticket = subject.get_ticket('PIO-338')
+          ticket = subject.find_ticket('PIO-338')
 
           expect(ticket).to be_nil
         end
