@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+#
+# git-youtrack-branch
+#
+#   Suggest a branch name from the given YouTrack ticket ID
+#
+#   Assumes the branches are named as:
+#   <team>/<branch-title>-<story-id>
+#
+require 'rubygems'
+require 'optparse'
+require 'youtrack'
+require 'readline'
+require 'term/ansicolor'
+require 'git-whistles/app'
+require 'git-whistles/youtrack/branch'
+
+
+Git::Whistles::Youtrack::Branch.run!

@@ -1,0 +1,81 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: http://youtrack.com/rest/user/login
+    body:
+      encoding: UTF-8
+      string: login=some_username&password=some_password
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Server:
+      - nginx/1.9.5
+      Date:
+      - Mon, 26 Sep 2016 16:44:24 GMT
+      Content-Type:
+      - application/xml;charset=UTF-8
+      Content-Length:
+      - '17'
+      Connection:
+      - keep-alive
+      Set-Cookie:
+      - YTSESSIONID=1mcbb8c57vxc5zoaxfanbijc3;Path=/;HttpOnly
+      - jetbrains.charisma.main.security.PRINCIPAL=ZGM3YzVjNzc4YjkwMWQ2ZmI1OTgwOWQwYzI4MTQ1OGEyNzVhNDFlMWQyOTEwNTNiMzRkZjQ4YmE2ODRiMmUyYjphbGZyZWRvLm1vdHRh;Path=/;Expires=Tue,
+        26-Sep-2017 16:44:24 GMT
+      Expires:
+      - Thu, 01 Jan 1970 00:00:00 GMT
+      Access-Control-Expose-Headers:
+      - Location
+      Cache-Control:
+      - no-cache, no-store, no-transform, must-revalidate
+    body:
+      encoding: UTF-8
+      string: "<login>ok</login>"
+    http_version: 
+  recorded_at: Mon, 26 Sep 2016 16:43:51 GMT
+- request:
+    method: get
+    uri: http://youtrack.com/rest/issue/non-existent
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Cookie:
+      - YTSESSIONID=1mcbb8c57vxc5zoaxfanbijc3;Path=/;HttpOnly, jetbrains.charisma.main.security.PRINCIPAL=ZGM3YzVjNzc4YjkwMWQ2ZmI1OTgwOWQwYzI4MTQ1OGEyNzVhNDFlMWQyOTEwNTNiMzRkZjQ4YmE2ODRiMmUyYjphbGZyZWRvLm1vdHRh;Path=/;Expires=Tue,
+        26-Sep-2017 16:44:24 GMT
+  response:
+    status:
+      code: 404
+      message: Not Found
+    headers:
+      Server:
+      - nginx/1.9.5
+      Date:
+      - Mon, 26 Sep 2016 16:44:24 GMT
+      Content-Type:
+      - application/xml;charset=UTF-8
+      Content-Length:
+      - '86'
+      Connection:
+      - keep-alive
+      Access-Control-Expose-Headers:
+      - Location
+      Cache-Control:
+      - no-cache, no-store, no-transform, must-revalidate
+    body:
+      encoding: UTF-8
+      string: <?xml version="1.0" encoding="UTF-8" standalone="yes"?><error>Issue
+        not found.</error>
+    http_version: 
+  recorded_at: Mon, 26 Sep 2016 16:43:51 GMT
+recorded_with: VCR 3.0.3

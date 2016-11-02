@@ -37,6 +37,8 @@ Install with:
 
 `git stash-and-checkout [branch]` - Stash and checkout another branch.
 
+`git youtrack-branch <ticket-id>` - Creates a branch name suggestion from the specified Youtrack ticket ID. 
+
 ### More details on some of the commands
 
 #### merge-po
@@ -93,6 +95,16 @@ the Pivotal Tracker UI. The token can then be set locally via the following comm
 
 ```
 $ git config [--global] pivotal-tracker.token <token>
+```
+
+### Youtrack
+
+All Youtrack commands require a Youtrack username, password and url. Please use the following commands to set it up:
+
+```
+$ git config [--global] youtrack.username <username>
+$ git config [--global] youtrack.password <password>
+$ git config [--global] youtrack.url <https://your_youtrack_url.com>
 ```
 
 ### License
