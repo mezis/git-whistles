@@ -1,1 +1,13 @@
-git-whistles
+#!/usr/bin/env ruby
+# encoding: UTF-8
+#
+# git-whistles --
+#
+# Runner for shell scripts in libexec
+#
+require 'rubygems'
+require 'git-whistles'
+
+script = File.basename(__FILE__)
+exec Git::Whistles::GEMDIR.join("libexec/#{script}.sh").cleanpath.to_s, *ARGV
+
