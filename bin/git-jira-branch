@@ -21,8 +21,7 @@ class App < Git::Whistles::App
   def initialize
     super
 
-    @jira = Git::Whistles::Jira.new
-    @client = @jira.get_client
+    @client = Git::Whistles::Jira.new.get_client rescue die('Aborting.')
   end
 
   def main(args)

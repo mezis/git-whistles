@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # encoding: UTF-8
 #
-# git-pivotal-pr --
+# git-pr --
 #
 #   Open a pull request for the current branch in your default browser
 #
@@ -13,6 +13,6 @@ require 'optparse'
 require 'cgi'
 require 'term/ansicolor'
 require 'git-whistles/app'
-require 'git-whistles/pull_request/pivotal'
+require 'git-whistles/pull_request/bare'
 
-Git::Whistles::PullRequest::Pivotal.run!
+Git::Whistles::PullRequest::Bare.run!

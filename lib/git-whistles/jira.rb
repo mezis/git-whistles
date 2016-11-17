@@ -31,7 +31,7 @@ module Git
             Please set it with:
             $ git config [--global] jira.username <username>
           }
-          die "Aborting."
+          raise "Aborting."
         end
 
         @password = `git config jira.password`.strip
@@ -42,7 +42,7 @@ module Git
             Please set it with:
             $ git config [--global] jira.password <password>
           }
-          die "Aborting."
+          raise "Aborting."
         end
 
         @site = `git config jira.site`.strip
@@ -53,9 +53,8 @@ module Git
             Please set it with:
             $ git config [--global] jira.site <https://mydomain.atlassian.net>
           }
-          die "Aborting."
+          raise "Aborting."
         end
-
       end
     end
   end
