@@ -11,6 +11,8 @@ Install with:
 
 `git chop [branch1, ...]` - Deletes the local and origin copy of a branch. Useful to close feature branches once a feature is completed. It also accepts multiple branches separated by spaces
 
+`git pr [--from your-branch] [--to target-branch]` - Open your browser at a Github pull-request page for the specified branch (defaults to the current `head`).
+
 `git explore [-r REF] [-p PATH]` - Opens the remote origin interface on the given reference and path. Reference defaults to current branch and path to root
 
 `git ff-all-branches [-f] [-p] [-v]` - Fast-forward all local tracking branches to their remote counterpart (where possible). Very useful on big projects.
@@ -37,7 +39,7 @@ Install with:
 
 `git stash-and-checkout [branch]` - Stash and checkout another branch.
 
-`git youtrack-branch <ticket-id>` - Creates a branch name suggestion from the specified Youtrack ticket ID. 
+`git youtrack-branch <ticket-id>` - Creates a branch name suggestion from the specified Youtrack ticket ID.
 
 ### More details on some of the commands
 
@@ -45,7 +47,7 @@ Install with:
 
 `git merge-po <ancestor> <left> <right>`
 
-For those using `gettext` for I18n, a must-have: this custom merge driver 
+For those using `gettext` for I18n, a must-have: this custom merge driver
 will handle most merge/conflicts issues when a PO file was edited by different
 committers.
 
@@ -61,7 +63,7 @@ Add this to .gitattributes:
 
     *.po   merge=pofile
     *.pot  merge=pofile
-    
+
 Or, if you want to make this setting global:
 
 Create a user global file ~/.gitattributes and fill it with:
