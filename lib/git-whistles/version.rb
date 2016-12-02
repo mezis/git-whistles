@@ -4,7 +4,7 @@ require 'pathname'
 
 module Git
   module Whistles
-    VERSION = "1.2.1"
+    VERSION = '1.3'
     GEMDIR = Pathname.new(__FILE__).parent.parent.parent
   end
 end
