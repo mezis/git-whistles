@@ -36,7 +36,7 @@ module Git
           log.info "Found story #{issue_id} in '#{issue.fields['project']['name']}'"
 
           title       = "#{issue_id}: #{issue.summary}"
-          headline    = "Jira story [##{issue_id}](#{client.options[:site]}/browse/#{issue_id}) in project *#{issue.project.name}*:"
+          headline    = "Jira story [##{issue_id}](#{client.options[:site]}/browse/#{issue_id}) in project *#{issue.project.name.strip}*:"
 
           description = safe_description(issue.description)
           params[:subject] = issue.summary
