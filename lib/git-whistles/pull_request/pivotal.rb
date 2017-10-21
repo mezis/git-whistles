@@ -48,7 +48,7 @@ module Git
           log.info "Found story #{story_id} in '#{project.name}'"
 
           title       = "#{project.name}: #{story.name} [##{story.id}]"
-          headline    = "Pivotal tracker story [##{story_id}](#{story.url}) in project *#{project.name}*:"
+          headline    = "Pivotal tracker story [##{story_id}](#{story.url}) in project *#{project.name.strip}*:"
           description = story.description.split("\n").map { |line| "> #{line}" }.join("\n")
           params[:subject] = story.name
           params[:'pull_request[title]'] = title
