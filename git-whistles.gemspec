@@ -23,7 +23,7 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "webmock"
   gem.add_development_dependency "vcr"
 
-  gem.add_dependency "pivotal-tracker", "~> 0.5.6"
+  gem.add_dependency "tracker_api", "~> 1.9.1"
   gem.add_dependency "term-ansicolor"
   gem.add_dependency "jira-ruby", "~> 1.0.0"
   gem.add_dependency "youtrack", "~> 0.0.11"

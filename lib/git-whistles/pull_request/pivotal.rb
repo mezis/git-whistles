@@ -1,4 +1,4 @@
-require 'pivotal-tracker'
+require 'tracker_api'
 require_relative 'bare'
 
 module Git
@@ -28,14 +28,16 @@ module Git
 
           log.info 'Finding your project and story¬'
 
-          PivotalTracker::Client.token = token
+          client = TrackerApi::Client.new(token: token)
           begin
-            story, project = PivotalTracker::Project.all.find do |project|
+            story, project = client.projects.find do |project|
               log.info '.¬'
-              story = project.stories.find(story_id) and break story, project
+              story = project.story(story_id) and break story, project
             end
             log.info '.'
-          rescue RestClient::Unauthorized
+          rescue StandardError => e
+            raise unless e.kind_of?(TrackerApi::Errors::ClientError) && e.response[:status] == 403
+
             log.info '.'
             die "Your token is not authorized by Pivotal Tracker! Please make sure you have the correct one"
           end
