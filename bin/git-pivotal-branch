@@ -2,15 +2,15 @@
 # encoding: UTF-8
 #
 # git-pivotal-branch
-# 
+#
 #   Suggest a branch name from the given Pivotal Tracker story ID
-# 
+#
 #   Assumes the branches are named as:
 #   <team>/<branch-title>-<story-id>
-# 
+#
 require 'rubygems'
 require 'optparse'
-require 'pivotal-tracker'
+require 'tracker_api'
 require 'readline'
 require 'term/ansicolor'
 require 'git-whistles/app'
@@ -56,23 +56,23 @@ class App < Git::Whistles::App
     `cd #{ENV['PWD']} && git checkout -b #{branch_name}`
 
     # comment and start on PT
-    story.notes.create :text => "Created branch #{branch_name}"
-    story.update :current_state => 'started'
+    story.create_comment :text => "Created branch #{branch_name}"
+    story.current_state = 'started'
 
     puts Term::ANSIColor.green('Created branch and started PT story')
   end
 
   private
-  
+
   def usage
     'Usage: git pivotal-branch PIVOTAL_TRACKER_STORY_ID'
   end
-  
+
   def show_and_exit(message)
     puts message
     exit 1
   end
-  
+
   def option_parser
     @option_parser ||= OptionParser.new do |op|
       op.banner = usage
@@ -97,10 +97,11 @@ class App < Git::Whistles::App
 
     log.info "Finding your project and story¬"
 
-    PivotalTracker::Client.token = token
-    story, project = PivotalTracker::Project.all.find do |project|
+    client = TrackerApi::Client.new(token: token)
+
+    story, project = client.projects.find do |project|
       log.info '.¬'
-      story = project.stories.find(story_id) and break story, project
+      story = project.story(story_id) and break story, project
     end
     log.info '.'
 
