@@ -1,7 +1,7 @@
 module Git
   module Whistles
     class Jira
-      attr_reader :username, :password, :site
+      attr_reader :username, :token, :site
 
       def initialize
         get_config
@@ -10,7 +10,7 @@ module Git
       def get_client(opts = {})
         options = {
           username: @username,
-          password: @password,
+          password: @token,
           site: @site,
           context_path: '',
           auth_type: :basic,
@@ -34,13 +34,13 @@ module Git
           raise "Aborting."
         end
 
-        @password = `git config jira.password`.strip
-        if password.empty?
+        @token = `git config jira.token`.strip
+        if token.empty?
           puts Term::ANSIColor.yellow %Q{
             Your branch appears to have a issue ID,
-            but I don't know your JIRA password!
+            but I don't know your JIRA token!
             Please set it with:
-            $ git config [--global] jira.password <password>
+            $ git config [--global] jira.token <token>
           }
           raise "Aborting."
         end
