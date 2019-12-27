@@ -69,12 +69,12 @@ class App < Git::Whistles::App
     attrs = {
       update: {
         comment: [ { add: { body: "Created branch #{branch_name}" } } ],
-        assignee: [ { set: { name: username } } ]
+        assignee: [ { set: { name: account_id } } ]
       }
     }
     issue.save!(attrs)
 
-    if transition
+    if transition.present?
       attrs = { transition: { id: transition } }
       issue.client.post("#{issue.url}/transitions", attrs.to_json)
     end
@@ -105,6 +105,10 @@ class App < Git::Whistles::App
 
   def username
     @username ||= `git config jira.username`.strip
+  end
+
+  def account_id
+    @account_id ||= `git config jira.accountId`.strip
   end
 
   def get_jira_info(issue_id)
