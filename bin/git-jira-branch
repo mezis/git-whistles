@@ -64,20 +64,22 @@ class App < Git::Whistles::App
     # create branch
     `cd #{ENV['PWD']} && git checkout -b #{branch_name}`
 
-    # issue.notes.create :text => "Created branch #{branch_name}"
-    # issue.update :current_state => 'started'
-    attrs = {
-      update: {
-        comment: [ { add: { body: "Created branch #{branch_name}" } } ],
-        assignee: [ { set: { name: account_id } } ]
-      }
-    }
-    issue.save!(attrs)
+    # assign
+    issue.client.put("#{issue.url}/assignee", { accountId: account_id }.to_json)
 
+    # transition
     if transition.present?
-      attrs = { transition: { id: transition } }
-      issue.client.post("#{issue.url}/transitions", attrs.to_json)
+      issue.client.post("#{issue.url}/transitions", { transition: { id: transition } }.to_json)
     end
+
+    # add comment
+    issue.save!(
+      update: {
+        comment: [
+          { add: { body: "Created branch #{branch_name}" } }
+        ]
+      }
+    )
 
     puts Term::ANSIColor.green('Created branch and started JIRA issue')
   end
