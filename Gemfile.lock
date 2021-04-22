@@ -48,7 +48,7 @@ GEM
       mini_portile2 (~> 2.3.0)
     nokogiri-happymapper (0.6.0)
       nokogiri (~> 1.5)
-    oauth (0.5.3)
+    oauth (0.5.6)
     pivotal-tracker (0.5.13)
       builder
       crack
