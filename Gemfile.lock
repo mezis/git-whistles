@@ -86,7 +86,7 @@ GEM
       tins (~> 1.0)
     thread_safe (0.3.6)
     tins (1.15.0)
-    tzinfo (1.2.3)
+    tzinfo (1.2.10)
       thread_safe (~> 0.1)
     unf (0.1.4)
       unf_ext
