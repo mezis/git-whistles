@@ -81,12 +81,12 @@ Add this to your user global ~/.gitconfig:
 
 ### JIRA
 
-All JIRA commands require a JIRA username, password and site. Please use the following commands
+All JIRA commands require a JIRA username, [API token](https://id.atlassian.com/manage/api-tokens) and site. Please use the following commands
 to set it up:
 
 ```
 $ git config [--global] jira.username <username>
-$ git config [--global] jira.password <password>
+$ git config [--global] jira.token <token>
 $ git config [--global] jira.site <https://mydomain.atlassian.net>
 ```
 
