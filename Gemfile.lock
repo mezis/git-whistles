@@ -20,12 +20,12 @@ GEM
     builder (3.2.3)
     coderay (1.1.2)
     concurrent-ruby (1.0.5)
-    crack (0.4.3)
-      safe_yaml (~> 1.0.0)
+    crack (0.4.5)
+      rexml
     diff-lcs (1.5.0)
     domain_name (0.5.20170404)
       unf (>= 0.0.5, < 1.0.0)
-    hashdiff (0.3.7)
+    hashdiff (1.0.1)
     hashie (5.0.0)
     http-cookie (1.0.3)
       domain_name (~> 0.5)
@@ -72,6 +72,7 @@ GEM
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 4.0)
       netrc (~> 0.8)
+    rexml (3.2.5)
     rspec (3.11.0)
       rspec-core (~> 3.11.0)
       rspec-expectations (~> 3.11.0)
@@ -85,7 +86,6 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.11.0)
     rspec-support (3.11.1)
-    safe_yaml (1.0.4)
     slop (3.6.0)
     snaky_hash (2.0.1)
       hashie
@@ -101,10 +101,10 @@ GEM
     unf_ext (0.0.7.4)
     vcr (6.1.0)
     version_gem (1.1.1)
-    webmock (3.1.0)
-      addressable (>= 2.3.6)
+    webmock (3.18.1)
+      addressable (>= 2.8.0)
       crack (>= 0.3.2)
-      hashdiff
+      hashdiff (>= 0.4.0, < 2.0.0)
     youtrack (0.0.11)
       httparty
       multipart-post
