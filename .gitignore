@@ -1,9 +1,8 @@
-*.gem
 *.rbc
 .bundle
 .config
 .yardoc
-pkg
+/pkg
 rdoc
 tmp
 nbproject
