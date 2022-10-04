@@ -1,6 +1,7 @@
 require 'youtrack'
-require_relative 'ticket'
 require 'term/ansicolor'
+require_relative '../../git-whistles'
+require_relative 'ticket'
 
 module Git::Whistles
   module Youtrack

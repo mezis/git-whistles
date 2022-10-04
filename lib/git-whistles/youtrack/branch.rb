@@ -1,3 +1,4 @@
+require 'readline'
 require_relative '../app'
 require_relative '../youtrack/api'
 require_relative '../youtrack/ticket'
