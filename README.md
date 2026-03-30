@@ -50,7 +50,7 @@ git staging -x
 
 - **`git chop [branch1 ...]`** — Delete local and remote branch(es). If you're on a branch being chopped, checks out the primary branch (main/master) first.
 
-- **`git ff-all-branches [-f] [-p] [-v] [-q] [-r REMOTE]`** — Fast-forward all local tracking branches to their remote counterpart where possible. `-f` runs `git fetch` first; `-p` dry-run; `-v` verbose.
+- **`git ff-all-branches [--no-fetch] [-p] [-v] [-q] [-r REMOTE]`** — Fast-forward all local tracking branches to their remote counterpart where possible. Fetches first by default; `--no-fetch` skips that step; `-p` dry-run; `-v` verbose.
 
 - **`git list-branches [-l] [-r] [-i integration-branch] [-p]`** — List local or remote branches and their distance to an integration branch (default `origin/master`). `-p` porcelain (CSV).
 

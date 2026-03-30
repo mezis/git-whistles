@@ -1,13 +1,13 @@
 //! git ff-all-branches: fast-forward all local tracking branches to their remote counterparts.
 
-use clap::Args;
+use clap::{ArgAction, Args};
 use std::collections::HashMap;
 use crate::git;
 
 #[derive(Args)]
 #[command(about = "Fast-forward all local tracking branches to their remote counterpart where possible.")]
 pub struct FfAllBranchesArgs {
-    #[arg(short, long)]
+    #[arg(long = "no-fetch", default_value_t = true, action = ArgAction::SetFalse)]
     pub fetch: bool,
     #[arg(short = 'p', long)]
     pub dry_run: bool,
