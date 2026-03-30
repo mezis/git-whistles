@@ -1,8 +1,11 @@
-*.rbc
-.config
-.yardoc
-/pkg
-rdoc
+# Rust
+/target
+
+# Editor / OS
+.idea/
+.DS_Store
 tmp
 nbproject
-.idea/
+
+/AGENTS.md
+/.cursor

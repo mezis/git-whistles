@@ -1,0 +1,16 @@
+[package]
+name = "git-whistles"
+version = "0.1.0"
+edition = "2021"
+description = "A few helpers for classic Git workflows"
+license = "MIT"
+repository = "https://github.com/mezis/git-whistles"
+
+[dependencies]
+clap = { version = "4.4", features = ["derive"] }
+tempfile = "3.10"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
