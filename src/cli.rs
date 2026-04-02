@@ -1,6 +1,6 @@
 //! CLI parsing and dispatch to subcommands.
 
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
 
 use crate::cmd;
 use crate::exec;
@@ -65,9 +65,11 @@ impl Cli {
             Some(Commands::Shim(a)) => cmd::shim::run_shim(a),
             Some(Commands::Unshim(a)) => cmd::shim::run_unshim(a),
             None => {
-                // No subcommand: show help
-                let _ = CliApp::try_parse_from(["git-whistles", "--help"]);
-                std::process::exit(1);
+                // Surface a real help message when argv resolution leaves us without a subcommand.
+                let mut command = CliApp::command();
+                command.print_help()?;
+                eprintln!();
+                Err("missing subcommand".into())
             }
         }
     }
