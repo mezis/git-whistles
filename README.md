@@ -52,7 +52,7 @@ git staging -x
 
 - **`git ff-all-branches [--no-fetch] [-p] [-v] [-q] [-r REMOTE]`** — Fast-forward all local tracking branches to their remote counterpart where possible. Fetches first by default; `--no-fetch` skips that step; `-p` dry-run; `-v` verbose.
 
-- **`git list-branches [-l] [-r] [-i integration-branch] [-p]`** — List local or remote branches and their distance to an integration branch (default `origin/master`). `-p` porcelain (CSV).
+- **`git list-branches [-l] [-r] [-i integration-branch] [-p]`** — List local or remote branches and their distance to an integration branch (default: same primary as `git changes`: `origin/HEAD` if set, else `origin/main` or `origin/master`). `-p` porcelain (CSV).
 
 - **`git stash-and-checkout <branch>`** — Stash (including untracked), checkout the branch, then pop the matching WIP stash if any.
 

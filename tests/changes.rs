@@ -8,13 +8,7 @@ fn setup_changes_repo(prefix: &str) -> std::path::PathBuf {
     let dir = common::temp_test_dir(prefix);
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).unwrap();
-    common::init_repo(&dir).unwrap();
-    common::run_git_ok(
-        &dir,
-        &["remote", "add", "origin", "https://example.com/repo.git"],
-    )
-    .unwrap();
-    common::run_git_ok(&dir, &["update-ref", "refs/remotes/origin/master", "HEAD"]).unwrap();
+    common::init_repo_with_origin_master(&dir).unwrap();
     dir
 }
 

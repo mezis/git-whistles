@@ -10,8 +10,9 @@ pub struct ListBranchesArgs {
     pub local: bool,
     #[arg(short, long)]
     pub remote: bool,
-    #[arg(short, long, default_value = "origin/master")]
-    pub integration: String,
+    /// Integration branch to compare against (default: same as `git changes`: origin/HEAD, else origin/main or origin/master)
+    #[arg(short, long)]
+    pub integration: Option<String>,
     #[arg(short = 'p', long)]
     pub porcelain: bool,
 }
@@ -25,7 +26,10 @@ pub fn run(args: ListBranchesArgs) -> Result<(), Box<dyn std::error::Error + Sen
     } else {
         "local"
     };
-    let against = &args.integration;
+    let against = match &args.integration {
+        Some(s) => s.clone(),
+        None => git::origin_primary_branch()?,
+    };
 
     let branches = if args.remote {
         list_refs_remote()
@@ -39,7 +43,7 @@ pub fn run(args: ListBranchesArgs) -> Result<(), Box<dyn std::error::Error + Sen
     }
 
     for branch in branches {
-        let (ahead, behind, behind_by, author) = branch_stats(&branch, against)?;
+        let (ahead, behind, behind_by, author) = branch_stats(&branch, &against)?;
         if args.porcelain {
             println!("{},{},{},{},{}", branch, ahead, behind, behind_by, author);
         } else {

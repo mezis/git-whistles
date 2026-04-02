@@ -32,6 +32,14 @@ pub fn init_repo(dir: &Path) -> Result<(), String> {
     Ok(())
 }
 
+/// `init_repo` plus `origin` and `refs/remotes/origin/master` at HEAD so `origin_primary_branch()` resolves.
+pub fn init_repo_with_origin_master(dir: &Path) -> Result<(), String> {
+    init_repo(dir)?;
+    run_git_ok(dir, &["remote", "add", "origin", "https://example.com/repo.git"])?;
+    run_git_ok(dir, &["update-ref", "refs/remotes/origin/master", "HEAD"])?;
+    Ok(())
+}
+
 pub fn git_whistles_bin() -> std::path::PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("target")
