@@ -1,11 +1,13 @@
 //! git ff-all-branches: fast-forward all local tracking branches to their remote counterparts.
 
+use crate::git;
 use clap::{ArgAction, Args};
 use std::collections::HashMap;
-use crate::git;
 
 #[derive(Args)]
-#[command(about = "Fast-forward all local tracking branches to their remote counterpart where possible.")]
+#[command(
+    about = "Fast-forward all local tracking branches to their remote counterpart where possible."
+)]
 pub struct FfAllBranchesArgs {
     #[arg(long = "no-fetch", default_value_t = true, action = ArgAction::SetFalse)]
     pub fetch: bool,
@@ -13,8 +15,9 @@ pub struct FfAllBranchesArgs {
     pub dry_run: bool,
     #[arg(short, long, default_value = "origin")]
     pub remote: String,
-    #[arg(short, long)]
-    pub verbose: bool,
+    /// Print a line for each branch that would be or was fast-forwarded
+    #[arg(long)]
+    pub progress: bool,
     #[arg(short, long)]
     pub quiet: bool,
 }
@@ -63,19 +66,30 @@ pub fn run(args: FfAllBranchesArgs) -> Result<(), Box<dyn std::error::Error + Se
                 git::run_git_ok(&a).map_err(|e| e.to_string())?;
             }
         } else {
-            let merge_base = git::run_git_stdout(&["merge-base", old_head.as_str(), new_head.as_str()])?;
+            let merge_base =
+                git::run_git_stdout(&["merge-base", old_head.as_str(), new_head.as_str()])?;
             if merge_base != old_head.as_str() {
                 eprintln!("cannot fast-forward {}", branch_name);
                 continue;
             }
             if !args.dry_run {
                 let ref_name = format!("refs/heads/{}", branch_name);
-                git::run_git_ok(&["update-ref", &ref_name, new_head.as_str(), old_head.as_str()])
-                    .map_err(|e| e.to_string())?;
+                git::run_git_ok(&[
+                    "update-ref",
+                    &ref_name,
+                    new_head.as_str(),
+                    old_head.as_str(),
+                ])
+                .map_err(|e| e.to_string())?;
             }
         }
-        if args.verbose {
-            eprintln!("{}: {} -> {}", branch_name, short_sha(old_head), short_sha(new_head.as_str()));
+        if args.progress {
+            eprintln!(
+                "{}: {} -> {}",
+                branch_name,
+                short_sha(old_head),
+                short_sha(new_head.as_str())
+            );
         }
     }
     Ok(())

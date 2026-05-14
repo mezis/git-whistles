@@ -5,14 +5,14 @@ use std::process::Output;
 
 use crate::exec;
 
-/// Run a git command; returns (stdout, stderr, success).
+/// Run a git command with full stdout/stderr capture (porcelain, binary-safe parsing).
 pub fn run_git(args: &[&str]) -> std::io::Result<Output> {
-    exec::git_output(args)
+    exec::git_output_captured(args)
 }
 
 /// Run git, return stdout as String. Errors on non-zero exit or I/O error.
 pub fn run_git_stdout(args: &[&str]) -> Result<String, String> {
-    let out = run_git(args).map_err(|e| e.to_string())?;
+    let out = exec::git_output_stdout(args).map_err(|e| e.to_string())?;
     let stdout = String::from_utf8_lossy(&out.stdout);
     let stderr = String::from_utf8_lossy(&out.stderr);
     if out.status.success() {
@@ -22,15 +22,9 @@ pub fn run_git_stdout(args: &[&str]) -> Result<String, String> {
     }
 }
 
-/// Run git, return success. Stderr is preserved for error message.
+/// Run git, return success. When not streaming, stderr is preserved for error messages.
 pub fn run_git_ok(args: &[&str]) -> Result<(), String> {
-    let out = run_git(args).map_err(|e| e.to_string())?;
-    if out.status.success() {
-        Ok(())
-    } else {
-        let stderr = String::from_utf8_lossy(&out.stderr);
-        Err(format!("git {} failed: {}", args.join(" "), stderr.trim()))
-    }
+    exec::git_side_effect(args)
 }
 
 /// Run git with `-C` so commands execute in another working tree of the same repo.
@@ -46,9 +40,7 @@ pub fn run_git_ok_in(repo: &Path, args: &[&str]) -> Result<(), String> {
 /// Top-level directory of the current worktree (canonicalized).
 pub fn worktree_root() -> Result<PathBuf, String> {
     let raw = run_git_stdout(&["rev-parse", "--show-toplevel"])?;
-    PathBuf::from(raw)
-        .canonicalize()
-        .map_err(|e| e.to_string())
+    PathBuf::from(raw).canonicalize().map_err(|e| e.to_string())
 }
 
 /// If `branch` is checked out in a linked worktree other than the current one, return that path.
@@ -110,16 +102,19 @@ pub fn origin_primary_branch() -> Result<String, String> {
         }
     }
     // Fallback: which of origin/main or origin/master exists?
-    if run_git(&["rev-parse", "origin/main"]).ok().map(|o| o.status.success()) == Some(true) {
+    if run_git_ok(&["rev-parse", "origin/main"]).is_ok() {
         return Ok("origin/main".to_string());
     }
-    if run_git(&["rev-parse", "origin/master"]).ok().map(|o| o.status.success()) == Some(true) {
+    if run_git_ok(&["rev-parse", "origin/master"]).is_ok() {
         return Ok("origin/master".to_string());
     }
-    Err("could not determine primary branch (no origin/HEAD, origin/main, or origin/master)".to_string())
+    Err(
+        "could not determine primary branch (no origin/HEAD, origin/main, or origin/master)"
+            .to_string(),
+    )
 }
 
 /// Check if we're in a git repo.
 pub fn in_repo() -> bool {
-    run_git(&["rev-parse", "HEAD"]).map(|o| o.status.success()).unwrap_or(false)
+    run_git_ok(&["rev-parse", "HEAD"]).is_ok()
 }

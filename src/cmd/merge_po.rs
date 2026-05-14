@@ -9,7 +9,9 @@ use std::process::Stdio;
 use crate::exec;
 
 #[derive(Args)]
-#[command(about = "Three-way merge driver for gettext PO files (uses msguniq, msgcat, msgmerge, msggrep).")]
+#[command(
+    about = "Three-way merge driver for gettext PO files (uses msguniq, msgcat, msgmerge, msggrep)."
+)]
 pub struct MergePoArgs {
     /// Base (ancestor) PO file
     pub base: String,
@@ -26,11 +28,7 @@ pub fn run(args: MergePoArgs) -> Result<(), Box<dyn std::error::Error + Send + S
 
     let temp_dir = tempfile::tempdir()?;
     let t = temp_dir.path();
-    let (base_t, local_t, remote_t) = (
-        t.join("base.po"),
-        t.join("local.po"),
-        t.join("remote.po"),
-    );
+    let (base_t, local_t, remote_t) = (t.join("base.po"), t.join("local.po"), t.join("remote.po"));
     let (header, local_changes, remote_changes, unchanged, conflicts, local_only, remote_only) = (
         t.join("header.po"),
         t.join("local-changes.po"),
@@ -49,15 +47,19 @@ pub fn run(args: MergePoArgs) -> Result<(), Box<dyn std::error::Error + Send + S
     // Optional: show file path (like original)
     if local.exists() {
         if let (Ok(hash_out), Ok(tree_out)) = (
-            exec::git_output(&["hash-object", local.to_str().unwrap_or("")]),
-            exec::git_output(&["ls-tree", "-r", "HEAD"]),
+            exec::git_output_stdout(&["hash-object", local.to_str().unwrap_or("")]),
+            exec::git_output_stdout(&["ls-tree", "-r", "HEAD"]),
         ) {
             if hash_out.status.success() && tree_out.status.success() {
                 let h = String::from_utf8_lossy(&hash_out.stdout).trim().to_string();
                 let tree = String::from_utf8_lossy(&tree_out.stdout);
                 for line in tree.lines() {
                     if line.contains(&h) && line.len() > 53 {
-                        eprintln!("Using custom PO merge driver ({}; {:?})", line[53..].trim(), t);
+                        eprintln!(
+                            "Using custom PO merge driver ({}; {:?})",
+                            line[53..].trim(),
+                            t
+                        );
                         break;
                     }
                 }
@@ -215,16 +217,7 @@ pub fn run(args: MergePoArgs) -> Result<(), Box<dyn std::error::Error + Send + S
 }
 
 fn run_ok(program: &str, args: &[&str]) -> Result<(), String> {
-    let out = exec::command_output(program, args).map_err(|e| e.to_string())?;
-    if out.status.success() {
-        Ok(())
-    } else {
-        Err(format!(
-            "{} failed: {}",
-            program,
-            String::from_utf8_lossy(&out.stderr)
-        ))
-    }
+    exec::command_side_effect(program, args)
 }
 
 /// extract_changes A B -> out: msgcat A B | msggrep conflict | msgmerge -o - A - | strip #~

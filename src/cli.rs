@@ -12,6 +12,9 @@ struct CliApp {
     /// Echo external commands to stderr before running (like `set -x`)
     #[arg(short = 'x', long = "echo-commands", global = true)]
     echo_commands: bool,
+    /// Stream external command output when not capturing it for parsing (stdout/stderr inherited, or stderr only when stdout is captured)
+    #[arg(short = 'v', long = "stream-commands", global = true)]
+    stream_commands: bool,
     #[command(subcommand)]
     command: Option<Commands>,
 }
@@ -54,6 +57,7 @@ impl Cli {
         let argv = build_argv(subcommand, args);
         let cli = CliApp::try_parse_from(argv)?;
         exec::set_echo_commands(cli.echo_commands);
+        exec::set_stream_output(cli.stream_commands);
         match cli.command {
             Some(Commands::Chop(a)) => cmd::chop::run(a),
             Some(Commands::FfAllBranches(a)) => cmd::ff_all_branches::run(a),

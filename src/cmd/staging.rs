@@ -8,9 +8,9 @@
 //! (fetch, merge main, push) instead of the first three steps; the command then
 //! continues in the current worktree on `staging` and returns to the starting branch.
 
-use clap::Args;
-use crate::git;
 use crate::cmd::{ff_all_branches, stash_and_checkout};
+use crate::git;
+use clap::Args;
 
 #[derive(Args)]
 #[command(about = "Sync branch with main, merge into staging, push, then return to branch.")]
@@ -68,7 +68,7 @@ pub fn run(args: StagingArgs) -> Result<(), Box<dyn std::error::Error + Send + S
             fetch: false,
             dry_run: false,
             remote: "origin".to_string(),
-            verbose: false,
+            progress: false,
             quiet: false,
         })?;
 

@@ -39,18 +39,21 @@ Remove shims: `git-whistles unshim [--dir /usr/local/bin]`
 
 ## Debugging
 
-Pass **`-x`** or **`--echo-commands`** on any invocation (before or after the subcommand) to print each external command to stderr before it runs, similar to `set -x`:
+Pass **`-x`** or **`--echo-commands`** on any invocation (before or after the subcommand) to print each external command to stderr before it runs, similar to `set -x`.
+
+Pass **`-v`** or **`--stream-commands`** to stream subprocess output to your terminal when git-whistles is not capturing that output for parsing (for commands that only capture stdout, stderr is still streamed).
 
 ```bash
 git-whistles -x chop my-branch
 git staging -x
+git-changes -v
 ```
 
 ## Commands
 
 - **`git chop [branch1 ...]`** — Delete local and remote branch(es). If you're on a branch being chopped, checks out the primary branch (main/master) first.
 
-- **`git ff-all-branches [--no-fetch] [-p] [-v] [-q] [-r REMOTE]`** — Fast-forward all local tracking branches to their remote counterpart where possible. Fetches first by default; `--no-fetch` skips that step; `-p` dry-run; `-v` verbose.
+- **`git ff-all-branches [--no-fetch] [-p] [--progress] [-q] [-r REMOTE]`** — Fast-forward all local tracking branches to their remote counterpart where possible. Fetches first by default; `--no-fetch` skips that step; `-p` dry-run; **`--progress`** prints a line for each branch that is or would be updated. Global **`-v` / `--stream-commands`** streams underlying `git` subprocess output (see Debugging).
 
 - **`git list-branches [-l] [-r] [-i integration-branch] [-p]`** — List local or remote branches and their distance to an integration branch (default: same primary as `git changes`: `origin/HEAD` if set, else `origin/main` or `origin/master`). `-p` porcelain (CSV).
 

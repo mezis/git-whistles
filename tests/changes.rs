@@ -72,6 +72,33 @@ fn changes_works_via_git_style_symlink() {
 
 #[cfg(unix)]
 #[test]
+fn changes_streams_git_log_with_dash_v_via_symlink() {
+    let dir = setup_changes_repo("gw_changes_symlink_stream");
+    common::run_git_ok(&dir, &["commit", "--allow-empty", "-m", "ahead"]).unwrap();
+    let link = common::symlink_to_bin(&dir, "git-changes").unwrap();
+
+    let out = std::process::Command::new(&link)
+        .args(["-v"])
+        .current_dir(&dir)
+        .output()
+        .unwrap();
+
+    assert!(
+        out.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout.contains("ahead"),
+        "expected streamed git log to include commit message, got: {}",
+        stdout
+    );
+    let _ = fs::remove_dir_all(&dir);
+}
+
+#[cfg(unix)]
+#[test]
 fn changes_echoes_commands_via_git_style_symlink() {
     let dir = setup_changes_repo("gw_changes_symlink_echo");
     let link = common::symlink_to_bin(&dir, "git-changes").unwrap();

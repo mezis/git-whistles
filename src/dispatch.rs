@@ -91,6 +91,13 @@ mod tests {
     }
 
     #[test]
+    fn git_style_symlink_preserves_stream_commands_flag() {
+        let (subcommand, args) = resolve_subcommand_and_args_from(&strings(&["git-changes", "-v"]));
+        assert_eq!(subcommand, Some("changes"));
+        assert_eq!(args, vec!["-v"]);
+    }
+
+    #[test]
     fn unknown_executable_name_falls_back_to_normal_parsing() {
         let (subcommand, args) =
             resolve_subcommand_and_args_from(&strings(&["mystery-binary", "changes"]));
