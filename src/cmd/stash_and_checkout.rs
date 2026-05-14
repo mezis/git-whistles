@@ -10,15 +10,13 @@ pub struct StashAndCheckoutArgs {
     pub branch: String,
 }
 
-pub fn run(args: StashAndCheckoutArgs) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    if !git::in_repo() {
-        return Err("not a git repository".into());
-    }
-    git::run_git_ok(&["stash", "push", "--include-untracked"]).map_err(|e| e.to_string())?;
-    git::run_git_ok(&["checkout", &args.branch]).map_err(|e| e.to_string())?;
+/// Stash (including untracked), checkout `branch`, then pop a stash whose message matches `WIP on {branch}:`.
+pub fn stash_checkout_pop_wip(branch: &str) -> Result<(), String> {
+    git::run_git_ok(&["stash", "push", "--include-untracked"])?;
+    git::run_git_ok(&["checkout", branch])?;
 
     let list = git::run_git_stdout(&["stash", "list"])?;
-    let target_prefix = format!("WIP on {}:", args.branch);
+    let target_prefix = format!("WIP on {}:", branch);
     let stash_ref = list
         .lines()
         .find(|l| l.contains(&target_prefix))
@@ -26,7 +24,14 @@ pub fn run(args: StashAndCheckoutArgs) -> Result<(), Box<dyn std::error::Error +
 
     if let Some(stash_ref) = stash_ref {
         eprintln!("Popping {}", stash_ref);
-        git::run_git_ok(&["stash", "pop", stash_ref]).map_err(|e| e.to_string())?;
+        git::run_git_ok(&["stash", "pop", stash_ref])?;
     }
     Ok(())
+}
+
+pub fn run(args: StashAndCheckoutArgs) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    if !git::in_repo() {
+        return Err("not a git repository".into());
+    }
+    stash_checkout_pop_wip(&args.branch).map_err(|e| e.into())
 }
