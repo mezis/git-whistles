@@ -39,10 +39,10 @@ pub fn run(args: FfAllBranchesArgs) -> Result<(), Box<dyn std::error::Error + Se
     }
 
     let current = git::current_branch()?;
-    let (local, remote_refs) = load_refs(&args.remote)?;
+    let tips = load_refs(&args.remote)?;
 
-    for (branch_name, old_head) in &local {
-        let Some(new_head) = remote_refs.get(branch_name) else {
+    for (branch_name, old_head) in &tips.local {
+        let Some(new_head) = tips.remote.get(branch_name) else {
             continue;
         };
         if old_head.as_str() == new_head.as_str() {
@@ -95,7 +95,13 @@ pub fn run(args: FfAllBranchesArgs) -> Result<(), Box<dyn std::error::Error + Se
     Ok(())
 }
 
-fn load_refs(remote: &str) -> Result<(HashMap<String, String>, HashMap<String, String>), String> {
+/// Local branch tips and matching remote-tracking tips, keyed by short branch name.
+struct BranchTips {
+    local: HashMap<String, String>,
+    remote: HashMap<String, String>,
+}
+
+fn load_refs(remote: &str) -> Result<BranchTips, String> {
     let out = git::run_git_stdout(&["show-ref"])?;
     let mut local = HashMap::new();
     let mut remote_refs = HashMap::new();
@@ -106,14 +112,17 @@ fn load_refs(remote: &str) -> Result<(HashMap<String, String>, HashMap<String, S
         let mut it = line.splitn(2, ' ');
         let sha = it.next().ok_or("invalid show-ref output")?;
         let ref_name = it.next().ok_or("invalid show-ref output")?;
-        if ref_name.starts_with(prefix_heads) {
-            local.insert(ref_name[prefix_heads.len()..].to_string(), sha.to_string());
-        } else if ref_name.starts_with(&prefix_remotes) {
-            let branch = ref_name[prefix_remotes.len()..].trim_start_matches('/');
+        if let Some(branch) = ref_name.strip_prefix(prefix_heads) {
+            local.insert(branch.to_string(), sha.to_string());
+        } else if let Some(rest) = ref_name.strip_prefix(&prefix_remotes) {
+            let branch = rest.trim_start_matches('/');
             if branch != "HEAD" {
                 remote_refs.insert(branch.to_string(), sha.to_string());
             }
         }
     }
-    Ok((local, remote_refs))
+    Ok(BranchTips {
+        local,
+        remote: remote_refs,
+    })
 }

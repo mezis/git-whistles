@@ -36,8 +36,8 @@ pub fn run(args: ListBranchesArgs) -> Result<(), Box<dyn std::error::Error + Sen
     if !args.porcelain {
         println!("Listing {} branches against {}", where_, against);
         println!(
-            "{:<70} {:>6} {:>6} {:>18} {}",
-            "BRANCH NAME", "AHEAD", "BEHIND", "OLDEST UNPULLED", "AUTHOR"
+            "{:<70} {:>6} {:>6} {:>18} AUTHOR",
+            "BRANCH NAME", "AHEAD", "BEHIND", "OLDEST UNPULLED"
         );
     }
 
@@ -129,13 +129,9 @@ fn color_by_duration(line: &str) -> String {
         (37, 0)
     } else if line.contains("minute") || line.contains("hour") {
         (32, 0)
-    } else if line.contains("days") {
+    } else if line.contains("days") || line.contains("week") {
         (33, 0)
-    } else if line.contains("week") {
-        (33, 0)
-    } else if line.contains("month") {
-        (31, 0)
-    } else if line.contains("year") {
+    } else if line.contains("month") || line.contains("year") {
         (31, 0)
     } else {
         (0, 0)
