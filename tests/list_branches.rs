@@ -8,7 +8,11 @@ use std::path::PathBuf;
 fn bin() -> PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("target")
-        .join(if cfg!(debug_assertions) { "debug" } else { "release" })
+        .join(if cfg!(debug_assertions) {
+            "debug"
+        } else {
+            "release"
+        })
         .join("git-whistles")
 }
 
@@ -37,7 +41,10 @@ fn list_branches_in_repo() {
         .unwrap();
     assert!(out.status.success());
     let stdout = String::from_utf8_lossy(&out.stdout);
-    assert!(stdout.contains("feature"), "expected feature branch in output: {stdout}");
+    assert!(
+        stdout.contains("feature"),
+        "expected feature branch in output: {stdout}"
+    );
     let _ = fs::remove_dir_all(&dir);
 }
 
@@ -53,12 +60,19 @@ fn list_branches_default_integration_matches_origin_primary() {
         .current_dir(&dir)
         .output()
         .unwrap();
-    assert!(out.status.success(), "stderr: {}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
     let stdout = String::from_utf8_lossy(&out.stdout);
     assert!(
         stdout.contains("against origin/master"),
         "expected default integration in output: {stdout}"
     );
-    assert!(stdout.contains("feature"), "expected feature branch in output: {stdout}");
+    assert!(
+        stdout.contains("feature"),
+        "expected feature branch in output: {stdout}"
+    );
     let _ = fs::remove_dir_all(&dir);
 }

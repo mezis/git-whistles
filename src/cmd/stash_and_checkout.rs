@@ -1,10 +1,12 @@
 //! git stash-and-checkout: stash (including untracked), checkout target, then pop matching WIP stash.
 
-use clap::Args;
 use crate::git;
+use clap::Args;
 
 #[derive(Args)]
-#[command(about = "Stash (including untracked), checkout target branch, then pop matching WIP stash if any.")]
+#[command(
+    about = "Stash (including untracked), checkout target branch, then pop matching WIP stash if any."
+)]
 pub struct StashAndCheckoutArgs {
     /// Target branch to checkout
     pub branch: String,

@@ -6,10 +6,10 @@
 use std::process::ExitCode;
 
 mod cli;
+mod cmd;
 mod dispatch;
 mod exec;
 mod git;
-mod cmd;
 
 use cli::Cli;
 use dispatch::resolve_subcommand_and_args;

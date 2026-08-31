@@ -19,13 +19,21 @@ fn load_po(data: &str) -> std::collections::HashMap<String, String> {
                     continue;
                 }
                 if let Some(rest) = line.strip_prefix("msgid \"") {
-                    id = rest.strip_suffix('"').unwrap_or(rest).replace("\\n", "\n").replace("\\\"", "\"");
+                    id = rest
+                        .strip_suffix('"')
+                        .unwrap_or(rest)
+                        .replace("\\n", "\n")
+                        .replace("\\\"", "\"");
                     state = 1;
                 }
             }
             1 => {
                 if let Some(rest) = line.strip_prefix("msgstr \"") {
-                    str_ = rest.strip_suffix('"').unwrap_or(rest).replace("\\n", "\n").replace("\\\"", "\"");
+                    str_ = rest
+                        .strip_suffix('"')
+                        .unwrap_or(rest)
+                        .replace("\\n", "\n")
+                        .replace("\\\"", "\"");
                     state = 2;
                 } else if line.starts_with('"') {
                     if let Some(inner) = line.strip_prefix('"').and_then(|s| s.strip_suffix('"')) {
@@ -54,14 +62,22 @@ fn load_po(data: &str) -> std::collections::HashMap<String, String> {
 fn merge_po_exe() -> std::path::PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("target")
-        .join(if cfg!(debug_assertions) { "debug" } else { "release" })
+        .join(if cfg!(debug_assertions) {
+            "debug"
+        } else {
+            "release"
+        })
         .join("git-whistles")
 }
 
 /// Asserts gettext tools are on PATH; call at start of merge-po tests.
 fn require_gettext() {
     for cmd in ["msguniq", "msgcat", "msgmerge", "msggrep"] {
-        let ok = Command::new(cmd).arg("--version").output().map(|o| o.status.success()).unwrap_or(false);
+        let ok = Command::new(cmd)
+            .arg("--version")
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false);
         assert!(ok, "gettext is mandatory: {} not found or failed. Install gettext (e.g. apt-get install gettext, brew install gettext)", cmd);
     }
 }
@@ -70,7 +86,11 @@ fn require_gettext() {
 fn merge_po_spec_fixtures() {
     require_gettext();
     let exe = merge_po_exe();
-    assert!(exe.exists(), "binary not found at {:?}, run cargo build first", exe);
+    assert!(
+        exe.exists(),
+        "binary not found at {:?}, run cargo build first",
+        exe
+    );
     let fixtures = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
         .join("fixtures")
@@ -84,22 +104,51 @@ fn merge_po_spec_fixtures() {
     let local_copy = out_dir.join("local.po");
     fs::copy(&local, &local_copy).unwrap();
     let status = Command::new(&exe)
-        .args(["merge-po", base.to_str().unwrap(), local_copy.to_str().unwrap(), remote.to_str().unwrap()])
+        .args([
+            "merge-po",
+            base.to_str().unwrap(),
+            local_copy.to_str().unwrap(),
+            remote.to_str().unwrap(),
+        ])
         .status()
         .expect("run merge-po");
     let output = fs::read_to_string(&local_copy).unwrap();
     let got = load_po(&output);
     let expected: std::collections::HashMap<_, _> = [
         ("This little piggie is unchanged", vec!["1"]),
-        ("This little piggie is removed from remote, unchanged on local", vec!["2"]),
-        ("This little piggie is removed from remote, changed on local", vec!["3.local"]),
-        ("This little piggie is removed from local, unchanged on remote", vec!["4"]),
-        ("This little piggie is removed from local, changed on remote", vec!["5.remote"]),
-        ("This little piggie is changed on local, unchanged on remote", vec!["6.local", "CONFLICT6"]),
+        (
+            "This little piggie is removed from remote, unchanged on local",
+            vec!["2"],
+        ),
+        (
+            "This little piggie is removed from remote, changed on local",
+            vec!["3.local"],
+        ),
+        (
+            "This little piggie is removed from local, unchanged on remote",
+            vec!["4"],
+        ),
+        (
+            "This little piggie is removed from local, changed on remote",
+            vec!["5.remote"],
+        ),
+        (
+            "This little piggie is changed on local, unchanged on remote",
+            vec!["6.local", "CONFLICT6"],
+        ),
         // gettext msgcat may or may not emit conflict when 2-of-3 agree; accept 7.remote, 7, or conflict block
-        ("This little piggie is changed on remote, unchanged on local", vec!["7.remote", "7", "CONFLICT"]),
-        ("This little piggie is added on remote, not on local", vec!["9.remote"]),
-        ("This little piggie is added on local, not on remote", vec!["10.local"]),
+        (
+            "This little piggie is changed on remote, unchanged on local",
+            vec!["7.remote", "7", "CONFLICT"],
+        ),
+        (
+            "This little piggie is added on remote, not on local",
+            vec!["9.remote"],
+        ),
+        (
+            "This little piggie is added on local, not on remote",
+            vec!["10.local"],
+        ),
     ]
     .into_iter()
     .map(|(k, v)| (k.to_string(), v))
@@ -115,13 +164,35 @@ fn merge_po_spec_fixtures() {
                 *a == g || (g.contains(a) && !g.contains("#-#-#"))
             }
         });
-        assert!(ok, "msgid {:?}: got {:?}, expected one of {:?}", msgid, g, allowed);
+        assert!(
+            ok,
+            "msgid {:?}: got {:?}, expected one of {:?}",
+            msgid, g, allowed
+        );
     }
     // Conflict cases: value should contain both and marker
-    let conflict1 = got.get("This little piggie is changed on remote and local").map(|s| s.as_str()).unwrap_or("");
-    assert!(conflict1.contains("8.local") && conflict1.contains("8.remote") && conflict1.contains("#-#-#"), "conflict 8: {:?}", conflict1);
-    let conflict2 = got.get("This little piggie is added on local and remote, with different values").map(|s| s.as_str()).unwrap_or("");
-    assert!(conflict2.contains("11.local") && conflict2.contains("11.remote") && conflict2.contains("#-#-#"), "conflict 11: {:?}", conflict2);
+    let conflict1 = got
+        .get("This little piggie is changed on remote and local")
+        .map(|s| s.as_str())
+        .unwrap_or("");
+    assert!(
+        conflict1.contains("8.local")
+            && conflict1.contains("8.remote")
+            && conflict1.contains("#-#-#"),
+        "conflict 8: {:?}",
+        conflict1
+    );
+    let conflict2 = got
+        .get("This little piggie is added on local and remote, with different values")
+        .map(|s| s.as_str())
+        .unwrap_or("");
+    assert!(
+        conflict2.contains("11.local")
+            && conflict2.contains("11.remote")
+            && conflict2.contains("#-#-#"),
+        "conflict 11: {:?}",
+        conflict2
+    );
     // Merge may exit 1 when conflicts remain; assertions above are the real check.
     let _ = status;
 }

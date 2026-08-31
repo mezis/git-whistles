@@ -10,7 +10,9 @@ use crate::dispatch::SUBCOMMANDS;
 const DEFAULT_DIR: &str = "/usr/local/bin";
 
 #[derive(Args)]
-#[command(about = "Add git-<subcommand> symlinks (not shim/unshim) to the main binary in a directory on PATH.")]
+#[command(
+    about = "Add git-<subcommand> symlinks (not shim/unshim) to the main binary in a directory on PATH."
+)]
 pub struct ShimArgs {
     /// Directory to install symlinks into
     #[arg(short, long, default_value = DEFAULT_DIR)]
@@ -48,7 +50,8 @@ pub fn run_shim(args: ShimArgs) -> Result<(), Box<dyn std::error::Error + Send +
         #[cfg(unix)]
         {
             let _ = fs::remove_file(&link);
-            std::os::unix::fs::symlink(&target, &link).map_err(|e| format!("symlink {}: {}", link.display(), e))?;
+            std::os::unix::fs::symlink(&target, &link)
+                .map_err(|e| format!("symlink {}: {}", link.display(), e))?;
             eprintln!("Linked {} -> {}", link.display(), target.display());
         }
         #[cfg(not(unix))]

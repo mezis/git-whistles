@@ -8,7 +8,11 @@ use std::path::PathBuf;
 fn bin() -> PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("target")
-        .join(if cfg!(debug_assertions) { "debug" } else { "release" })
+        .join(if cfg!(debug_assertions) {
+            "debug"
+        } else {
+            "release"
+        })
         .join("git-whistles")
 }
 
@@ -34,7 +38,11 @@ fn chop_deletes_local_branch() {
         .args(["init", "--bare", remote_dir.to_str().unwrap()])
         .output()
         .unwrap();
-    common::run_git_ok(&dir, &["remote", "add", "origin", remote_dir.to_str().unwrap()]).unwrap();
+    common::run_git_ok(
+        &dir,
+        &["remote", "add", "origin", remote_dir.to_str().unwrap()],
+    )
+    .unwrap();
     common::run_git_ok(&dir, &["push", "-u", "origin", "HEAD"]).unwrap();
     common::run_git_ok(&dir, &["checkout", "-b", "feature"]).unwrap();
     std::fs::write(dir.join("file.txt"), "feature change").unwrap();
@@ -47,7 +55,11 @@ fn chop_deletes_local_branch() {
         .current_dir(&dir)
         .output()
         .unwrap();
-    assert!(out.status.success(), "stderr: {}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
     let out = std::process::Command::new("git")
         .args(["branch"])
         .current_dir(&dir)

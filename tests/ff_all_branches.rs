@@ -8,7 +8,11 @@ use std::path::{Path, PathBuf};
 fn bin() -> PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("target")
-        .join(if cfg!(debug_assertions) { "debug" } else { "release" })
+        .join(if cfg!(debug_assertions) {
+            "debug"
+        } else {
+            "release"
+        })
         .join("git-whistles")
 }
 
@@ -37,10 +41,18 @@ fn setup_fetch_scenario(name: &str) -> (PathBuf, PathBuf, String) {
     fs::create_dir_all(&seed).unwrap();
     common::init_repo(&seed).unwrap();
     let branch = git_stdout(&seed, &["branch", "--show-current"]);
-    common::run_git_ok(&seed, &["remote", "add", "origin", remote.to_str().unwrap()]).unwrap();
+    common::run_git_ok(
+        &seed,
+        &["remote", "add", "origin", remote.to_str().unwrap()],
+    )
+    .unwrap();
     common::run_git_ok(&seed, &["push", "-u", "origin", branch.as_str()]).unwrap();
 
-    common::run_git_ok(&root, &["clone", remote.to_str().unwrap(), clone.to_str().unwrap()]).unwrap();
+    common::run_git_ok(
+        &root,
+        &["clone", remote.to_str().unwrap(), clone.to_str().unwrap()],
+    )
+    .unwrap();
 
     fs::write(seed.join("file.txt"), "hello again").unwrap();
     common::run_git_ok(&seed, &["commit", "-am", "remote update"]).unwrap();

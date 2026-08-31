@@ -8,7 +8,11 @@ use std::path::PathBuf;
 fn bin() -> PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("target")
-        .join(if cfg!(debug_assertions) { "debug" } else { "release" })
+        .join(if cfg!(debug_assertions) {
+            "debug"
+        } else {
+            "release"
+        })
         .join("git-whistles")
 }
 
