@@ -113,6 +113,7 @@ fn setup_repo_with_origin_staging_and_feature_worktree(prefix: &str) -> (PathBuf
     common::run_git_ok(&repo, &["init"]).unwrap();
     common::run_git_ok(&repo, &["config", "user.email", "test@test.com"]).unwrap();
     common::run_git_ok(&repo, &["config", "user.name", "Test"]).unwrap();
+    common::run_git_ok(&repo, &["config", "commit.gpgsign", "false"]).unwrap();
     fs::write(repo.join("file.txt"), "hello\n").unwrap();
     common::run_git_ok(&repo, &["add", "file.txt"]).unwrap();
     common::run_git_ok(&repo, &["commit", "-m", "initial"]).unwrap();
@@ -164,8 +165,7 @@ fn staging_succeeds_when_feature_branch_in_other_worktree() {
         panic!("staging failed\nstdout:\n{stdout}\nstderr:\n{stderr}");
     }
 
-    let head = common::run_git(&repo, &["symbolic-ref", "--short", "HEAD"])
-        .unwrap();
+    let head = common::run_git(&repo, &["symbolic-ref", "--short", "HEAD"]).unwrap();
     let branch = String::from_utf8_lossy(&head.stdout);
     assert_eq!(
         branch.trim(),
@@ -173,8 +173,7 @@ fn staging_succeeds_when_feature_branch_in_other_worktree() {
         "expected to return to main after staging from worktree path"
     );
 
-    let merge = common::run_git(&repo, &["log", "-1", "--oneline", "staging"])
-        .unwrap();
+    let merge = common::run_git(&repo, &["log", "-1", "--oneline", "staging"]).unwrap();
     let merge_msg = String::from_utf8_lossy(&merge.stdout);
     assert!(
         merge_msg.contains("Merge branch 'feature'"),

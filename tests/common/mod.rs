@@ -6,7 +6,11 @@ use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn run_git(dir: &Path, args: &[&str]) -> std::io::Result<std::process::Output> {
-    Command::new("git").current_dir(dir).args(args).output()
+    Command::new("git")
+        .current_dir(dir)
+        .args(["-c", "commit.gpgsign=false"])
+        .args(args)
+        .output()
 }
 
 pub fn run_git_ok(dir: &Path, args: &[&str]) -> Result<(), String> {
@@ -26,6 +30,7 @@ pub fn init_repo(dir: &Path) -> Result<(), String> {
     run_git_ok(dir, &["init"])?;
     run_git_ok(dir, &["config", "user.email", "test@test.com"])?;
     run_git_ok(dir, &["config", "user.name", "Test"])?;
+    run_git_ok(dir, &["config", "commit.gpgsign", "false"])?;
     std::fs::write(dir.join("file.txt"), "hello").map_err(|e| e.to_string())?;
     run_git_ok(dir, &["add", "file.txt"])?;
     run_git_ok(dir, &["commit", "-m", "initial"])?;
@@ -35,7 +40,10 @@ pub fn init_repo(dir: &Path) -> Result<(), String> {
 /// `init_repo` plus `origin` and `refs/remotes/origin/master` at HEAD so `origin_primary_branch()` resolves.
 pub fn init_repo_with_origin_master(dir: &Path) -> Result<(), String> {
     init_repo(dir)?;
-    run_git_ok(dir, &["remote", "add", "origin", "https://example.com/repo.git"])?;
+    run_git_ok(
+        dir,
+        &["remote", "add", "origin", "https://example.com/repo.git"],
+    )?;
     run_git_ok(dir, &["update-ref", "refs/remotes/origin/master", "HEAD"])?;
     Ok(())
 }
