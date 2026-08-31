@@ -122,3 +122,60 @@ fn changes_echoes_commands_via_git_style_symlink() {
     );
     let _ = fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn changes_forwards_extra_args_to_git_log() {
+    let dir = setup_changes_repo("gw_changes_extra_args");
+    common::run_git_ok(&dir, &["commit", "--allow-empty", "-m", "ahead"]).unwrap();
+
+    let out = std::process::Command::new(common::git_whistles_bin())
+        .args(["changes", "-x", "--stat"])
+        .current_dir(&dir)
+        .output()
+        .unwrap();
+
+    assert!(
+        out.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("+ git log --oneline HEAD '^origin/master' --stat"),
+        "expected extra git log args in echoed command, got: {}",
+        stderr
+    );
+    let _ = fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn changes_forwards_pathspec_after_double_dash() {
+    let dir = setup_changes_repo("gw_changes_pathspec");
+    fs::write(dir.join("file.txt"), "changed").unwrap();
+    common::run_git_ok(&dir, &["add", "file.txt"]).unwrap();
+    common::run_git_ok(&dir, &["commit", "-m", "touch file"]).unwrap();
+    common::run_git_ok(&dir, &["commit", "--allow-empty", "-m", "empty ahead"]).unwrap();
+
+    let with_path = std::process::Command::new(common::git_whistles_bin())
+        .args(["changes", "--", "file.txt"])
+        .current_dir(&dir)
+        .output()
+        .unwrap();
+    assert!(
+        with_path.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&with_path.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&with_path.stdout);
+    assert!(
+        stdout.contains("touch file"),
+        "expected path-filtered log to include file commit, got: {}",
+        stdout
+    );
+    assert!(
+        !stdout.contains("empty ahead"),
+        "expected path-filtered log to omit empty commit, got: {}",
+        stdout
+    );
+    let _ = fs::remove_dir_all(&dir);
+}

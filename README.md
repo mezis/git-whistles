@@ -63,7 +63,7 @@ git-changes -v
 
 - **`git merge-po <base> <local> <remote>`** — Three-way merge driver for gettext PO files. Uses `msguniq`, `msgcat`, `msgmerge`, `msggrep`. Not meant to be run by hand; use as a merge driver (see below).
 
-- **`git changes`** — Show commits on the current branch that are not in the primary remote branch. The primary branch is detected from `origin/HEAD`, or `origin/main`, or `origin/master`.
+- **`git changes [git log args…]`** — Show commits on the current branch that are not in the primary remote branch. The primary branch is detected from `origin/HEAD`, or `origin/main`, or `origin/master`. Extra arguments are passed through to `git log` (for example `git changes --stat` or `git changes -- path/to/file`). Global `-v` / `-x` stay git-whistles flags; use `--` if you need to pass those to `git log`.
 
 - **`git-whistles shim [--dir DIR]`** / **`git-whistles unshim [--dir DIR]`** — Add or remove `git-<subcommand>` symlinks to the main binary (not `shim` / `unshim` themselves). Default dir: `/usr/local/bin`.
 
