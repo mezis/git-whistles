@@ -137,7 +137,9 @@ pub fn origin_primary_branch() -> Result<String, String> {
     )
 }
 
-/// Check if we're in a git repo.
+/// Check if we're in a git repo. Always captured so `-v` cannot leak onto stdout.
 pub fn in_repo() -> bool {
-    run_git_ok(&["rev-parse", "HEAD"]).is_ok()
+    run_git(&["rev-parse", "HEAD"])
+        .map(|out| out.status.success())
+        .unwrap_or(false)
 }
