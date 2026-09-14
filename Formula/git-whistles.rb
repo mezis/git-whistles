@@ -3,7 +3,7 @@
 # Install: brew tap mezis/git-whistles && brew install git-whistles
 # (Tap is this repo; Formula lives in Formula/)
 class GitWhistles < Formula
-  desc "Helpers for classic Git workflows (chop, ff-all-branches, list-branches, stash-and-checkout, staging, merge-po, changes, shim)"
+  desc "Helpers for classic Git workflows (chop, ff-all-branches, list-branches, worktree-list, stash-and-checkout, staging, merge-po, changes, shim)"
   homepage "https://github.com/mezis/git-whistles"
   version "0.1.0"
 
