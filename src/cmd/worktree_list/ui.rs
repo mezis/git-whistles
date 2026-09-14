@@ -76,10 +76,9 @@ fn event_loop(
                 }
                 match worktree::list_worktrees(&clone) {
                     Ok(trees) => {
-                        let listings = vec![(clone, Ok(trees))];
-                        let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
-                        let (rows, _) = super::state::rows_from_listings(listings, &cwd);
-                        state.replace_rows(rows);
+                        let listings = vec![(clone.clone(), Ok(trees))];
+                        let (rows, _) = super::state::rows_from_listings(listings, &state.cwd);
+                        state.replace_clone_rows(&clone, rows);
                     }
                     Err(message) => eprintln!("{message}"),
                 }

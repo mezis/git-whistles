@@ -109,7 +109,7 @@ pub struct PickerState {
     selected: usize,
     confirm: Option<ConfirmState>,
     refuse_message: Option<String>,
-    cwd: PathBuf,
+    pub(crate) cwd: PathBuf,
 }
 
 impl PickerState {
@@ -129,9 +129,23 @@ impl PickerState {
         state
     }
 
-    /// Replace listed rows (after a successful destroy) and keep a valid selection.
-    pub fn replace_rows(&mut self, rows: Vec<PickerRow>) {
-        self.rows = rows;
+    /// Keep other clones' rows; splice `new_rows` at this clone's first position.
+    pub fn replace_clone_rows(&mut self, clone: &Path, new_rows: Vec<PickerRow>) {
+        let mut replacement = Some(new_rows);
+        let mut next = Vec::new();
+        for row in std::mem::take(&mut self.rows) {
+            if row.clone.as_path() == clone {
+                if let Some(rows) = replacement.take() {
+                    next.extend(rows);
+                }
+            } else {
+                next.push(row);
+            }
+        }
+        if let Some(rows) = replacement {
+            next.extend(rows);
+        }
+        self.rows = next;
         self.confirm = None;
         self.rebuild_visible();
     }
@@ -493,5 +507,27 @@ mod tests {
             }
             other => panic!("unexpected {other:?}"),
         }
+    }
+
+    #[test]
+    fn replace_clone_rows_keeps_other_clones() {
+        let mut state = PickerState::new(
+            vec![
+                row("/repos/app", "/wt/a", "main", true),
+                row("/repos/app", "/wt/b", "feature", false),
+                row("/repos/other", "/wt/c", "main", true),
+            ],
+            PathBuf::from("/elsewhere"),
+        );
+        state.replace_clone_rows(
+            Path::new("/repos/app"),
+            vec![row("/repos/app", "/wt/a", "main", true)],
+        );
+        let paths: Vec<_> = state
+            .visible()
+            .iter()
+            .map(|row| row.path.as_path())
+            .collect();
+        assert_eq!(paths, vec![Path::new("/wt/a"), Path::new("/wt/c")]);
     }
 }
