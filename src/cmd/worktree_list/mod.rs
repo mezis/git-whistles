@@ -49,6 +49,7 @@ pub fn run(_args: WorktreeListArgs) -> Result<(), Box<dyn std::error::Error + Se
 fn remember_current_clone() -> Result<KnownClones, String> {
     let path = registry::registry_path()?;
     let mut known = KnownClones::load(&path)?;
+    known.rewrite_if_pruned(&path)?;
     if git::in_repo() {
         match worktree::main_clone_root() {
             Ok(clone) => {

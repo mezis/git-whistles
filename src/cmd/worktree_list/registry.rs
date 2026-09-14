@@ -58,18 +58,36 @@ impl KnownClones {
         Ok(Self { clones })
     }
 
+    /// Rewrite the registry when missing/blank/duplicate lines were skipped.
+    pub fn rewrite_if_pruned(&self, path: &Path) -> Result<(), String> {
+        if !path.exists() {
+            return Ok(());
+        }
+        let on_disk =
+            fs::read_to_string(path).map_err(|err| format!("read {}: {}", path.display(), err))?;
+        if self.file_body() != on_disk {
+            self.save(path)?;
+        }
+        Ok(())
+    }
+
+    fn file_body(&self) -> String {
+        let mut body = String::new();
+        for clone in &self.clones {
+            body.push_str(&clone.path.to_string_lossy());
+            body.push('\n');
+        }
+        body
+    }
+
     /// Write remembered clones (one canonical path per line). Creates parent dirs.
     pub fn save(&self, path: &Path) -> Result<(), String> {
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent)
                 .map_err(|err| format!("create {}: {}", parent.display(), err))?;
         }
-        let mut body = String::new();
-        for clone in &self.clones {
-            body.push_str(&clone.path.to_string_lossy());
-            body.push('\n');
-        }
-        fs::write(path, body).map_err(|err| format!("write {}: {}", path.display(), err))?;
+        fs::write(path, self.file_body())
+            .map_err(|err| format!("write {}: {}", path.display(), err))?;
         Ok(())
     }
 
@@ -157,6 +175,12 @@ mod tests {
         assert_eq!(
             loaded.clones()[0].path(),
             existing.canonicalize().unwrap().as_path()
+        );
+        loaded.rewrite_if_pruned(&path).unwrap();
+        let rewritten = fs::read_to_string(&path).unwrap();
+        assert_eq!(
+            rewritten,
+            format!("{}\n", existing.canonicalize().unwrap().display())
         );
         let _ = fs::remove_file(&path);
         let _ = fs::remove_dir_all(&existing);
