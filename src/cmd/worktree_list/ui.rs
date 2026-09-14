@@ -71,18 +71,22 @@ fn event_loop(
             } => {
                 suspend_terminal(terminal)?;
                 let destroy_result = destroy_worktree(&path, &clone, &plan, force, locked);
-                resume_terminal(terminal)?;
                 if let Err(message) = destroy_result {
                     eprintln!("{message}");
+                    resume_terminal(terminal)?;
                     continue;
                 }
                 match worktree::list_worktrees(&clone) {
                     Ok(trees) => {
                         let listings = vec![(clone.clone(), Ok(trees))];
                         let (rows, _) = super::state::rows_from_listings(listings, &state.cwd);
+                        resume_terminal(terminal)?;
                         state.replace_clone_rows(&clone, rows);
                     }
-                    Err(message) => eprintln!("{message}"),
+                    Err(message) => {
+                        eprintln!("{message}");
+                        resume_terminal(terminal)?;
+                    }
                 }
             }
         }
