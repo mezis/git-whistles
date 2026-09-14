@@ -75,29 +75,23 @@ pub fn parse_worktree_porcelain(stdout: &str) -> Vec<Worktree> {
 
     for line in stdout.lines() {
         if line.is_empty() {
-            if let Some(path) = current_path.take() {
-                trees.push(Worktree {
-                    path,
-                    branch: current_branch.take(),
-                    locked: current_locked,
-                    is_bare: current_bare,
-                });
-                current_locked = false;
-                current_bare = false;
-            }
+            flush_worktree(
+                &mut trees,
+                &mut current_path,
+                &mut current_branch,
+                &mut current_locked,
+                &mut current_bare,
+            );
             continue;
         }
         if let Some(path) = line.strip_prefix("worktree ") {
-            if let Some(old_path) = current_path.take() {
-                trees.push(Worktree {
-                    path: old_path,
-                    branch: current_branch.take(),
-                    locked: current_locked,
-                    is_bare: current_bare,
-                });
-                current_locked = false;
-                current_bare = false;
-            }
+            flush_worktree(
+                &mut trees,
+                &mut current_path,
+                &mut current_branch,
+                &mut current_locked,
+                &mut current_bare,
+            );
             current_path = Some(PathBuf::from(path));
         } else if let Some(branch_ref) = line.strip_prefix("branch ") {
             current_branch = Some(short_branch_name(branch_ref.trim()));
@@ -109,15 +103,33 @@ pub fn parse_worktree_porcelain(stdout: &str) -> Vec<Worktree> {
             current_locked = true;
         }
     }
+    flush_worktree(
+        &mut trees,
+        &mut current_path,
+        &mut current_branch,
+        &mut current_locked,
+        &mut current_bare,
+    );
+    trees
+}
+
+fn flush_worktree(
+    trees: &mut Vec<Worktree>,
+    current_path: &mut Option<PathBuf>,
+    current_branch: &mut Option<String>,
+    current_locked: &mut bool,
+    current_bare: &mut bool,
+) {
     if let Some(path) = current_path.take() {
         trees.push(Worktree {
             path,
             branch: current_branch.take(),
-            locked: current_locked,
-            is_bare: current_bare,
+            locked: *current_locked,
+            is_bare: *current_bare,
         });
+        *current_locked = false;
+        *current_bare = false;
     }
-    trees
 }
 
 fn short_branch_name(branch_ref: &str) -> String {
