@@ -22,9 +22,7 @@ pub struct WorktreeListArgs {}
 
 /// Remember the current clone if any, list all remembered worktrees, run the picker.
 pub fn run(_args: WorktreeListArgs) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    remember_current_clone()?;
-    let registry = registry::registry_path()?;
-    let known = KnownClones::load(&registry)?;
+    let known = remember_current_clone()?;
     if known.clones().is_empty() {
         return Err("not a git repository; no remembered clones".into());
     }
@@ -48,16 +46,17 @@ pub fn run(_args: WorktreeListArgs) -> Result<(), Box<dyn std::error::Error + Se
     Ok(())
 }
 
-fn remember_current_clone() -> Result<(), String> {
-    if !git::in_repo() {
-        return Ok(());
-    }
-    let clone = worktree::main_clone_root()?;
+fn remember_current_clone() -> Result<KnownClones, String> {
     let path = registry::registry_path()?;
-    let mut known = KnownClones::load(&path)?;
-    known.upsert_front(MainClone::from_path(clone)?);
-    known.save(&path)?;
-    Ok(())
+    if git::in_repo() {
+        let clone = worktree::main_clone_root()?;
+        let mut known = KnownClones::load(&path)?;
+        known.upsert_front(MainClone::from_path(clone)?);
+        known.save(&path)?;
+        Ok(known)
+    } else {
+        KnownClones::load(&path)
+    }
 }
 
 /// One eval-able line: `cd -- 'posix-quoted-path'`.
