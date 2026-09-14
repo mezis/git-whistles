@@ -61,6 +61,17 @@ pub fn run_git_stdout_in(repo: &Path, args: &[&str]) -> Result<String, String> {
     run_git_stdout(&full)
 }
 
+/// Captured git side-effect in another working tree (never inherits stdout).
+pub fn run_git_ok_captured_in(repo: &Path, args: &[&str]) -> Result<(), String> {
+    let out = run_git_in(repo, args).map_err(|err| err.to_string())?;
+    if out.status.success() {
+        Ok(())
+    } else {
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        Err(format!("git {} failed: {}", args.join(" "), stderr.trim()))
+    }
+}
+
 /// Top-level directory of the current worktree (canonicalized).
 pub fn worktree_root() -> Result<PathBuf, String> {
     worktree_root_in(Path::new("."))

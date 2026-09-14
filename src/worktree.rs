@@ -31,13 +31,11 @@ pub fn list_worktrees(clone: &Path) -> Result<Vec<Worktree>, String> {
 }
 
 /// Main clone directory: parent of `.git` when linked, otherwise this checkout (or the bare repo).
-#[allow(dead_code)] // used by worktree-list (later commits)
 pub fn main_clone_root() -> Result<PathBuf, String> {
     main_clone_root_in(Path::new("."))
 }
 
 /// Same as [`main_clone_root`], resolved with `git -C repo`.
-#[allow(dead_code)] // used by worktree-list (later commits)
 pub fn main_clone_root_in(repo: &Path) -> Result<PathBuf, String> {
     let git_dir = git::run_git_stdout_in(repo, &["rev-parse", "--git-dir"])?;
     let common_dir = git::run_git_stdout_in(repo, &["rev-parse", "--git-common-dir"])?;
@@ -127,6 +125,100 @@ fn short_branch_name(branch_ref: &str) -> String {
         .strip_prefix("refs/heads/")
         .unwrap_or(branch_ref)
         .to_string()
+}
+
+/// List every clone's worktrees concurrently, then return results in `clones` order.
+///
+/// One OS thread per clone so independent `git worktree list` calls overlap. Results are
+/// joined in input order (not completion order) so picker grouping matches the registry.
+pub fn list_worktrees_for_clones(
+    clones: &[PathBuf],
+) -> Vec<(PathBuf, Result<Vec<Worktree>, String>)> {
+    std::thread::scope(|scope| {
+        let mut joins = Vec::with_capacity(clones.len());
+        for clone in clones {
+            let clone = clone.clone();
+            joins.push(scope.spawn(move || {
+                let listed = list_worktrees(&clone);
+                (clone, listed)
+            }));
+        }
+        joins
+            .into_iter()
+            .map(|handle| match handle.join() {
+                Ok(pair) => pair,
+                Err(_) => (
+                    PathBuf::new(),
+                    Err("worktree list thread panicked".to_string()),
+                ),
+            })
+            .collect()
+    })
+}
+
+/// Uncommitted and untracked paths from `git status --porcelain -uall`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DirtySample {
+    /// First paths (up to the requested cap).
+    pub paths: Vec<String>,
+    /// Total dirty entries including those not listed in `paths`.
+    pub total: usize,
+}
+
+impl DirtySample {
+    /// Whether the worktree has any uncommitted or untracked paths.
+    pub fn is_dirty(&self) -> bool {
+        self.total > 0
+    }
+}
+
+/// Sample dirty paths in `worktree`, keeping at most `limit` names.
+pub fn status_sample(worktree: &Path, limit: usize) -> Result<DirtySample, String> {
+    let out = git::run_git_in(worktree, &["status", "--porcelain", "-uall"])
+        .map_err(|err| err.to_string())?;
+    if !out.status.success() {
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        return Err(format!("git status failed: {}", stderr.trim()));
+    }
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    Ok(parse_status_porcelain(&stdout, limit))
+}
+
+/// Parse porcelain status lines into a capped sample.
+pub fn parse_status_porcelain(stdout: &str, limit: usize) -> DirtySample {
+    let mut paths = Vec::new();
+    let mut total = 0;
+    for line in stdout.lines() {
+        if line.is_empty() {
+            continue;
+        }
+        total += 1;
+        if paths.len() < limit {
+            if let Some(path) = porcelain_status_path(line) {
+                paths.push(path.to_string());
+            }
+        }
+    }
+    DirtySample { paths, total }
+}
+
+fn porcelain_status_path(line: &str) -> Option<&str> {
+    if line.len() < 4 {
+        return None;
+    }
+    Some(line[3..].trim())
+}
+
+/// Remove a linked worktree. `force` maps to `git worktree remove --force`.
+pub fn remove_worktree(clone: &Path, worktree: &Path, force: bool) -> Result<(), String> {
+    let worktree_str = worktree
+        .to_str()
+        .ok_or_else(|| "worktree path is not valid UTF-8".to_string())?;
+    if force {
+        git::run_git_ok_captured_in(clone, &["worktree", "remove", "--force", worktree_str])
+    } else {
+        git::run_git_ok_captured_in(clone, &["worktree", "remove", worktree_str])
+    }
 }
 
 #[cfg(test)]
@@ -235,6 +327,66 @@ mod tests {
         assert_eq!(from_linked, expected);
         let trees = list_worktrees(&repo).unwrap();
         assert!(trees.len() >= 2);
+        let _ = fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn parse_status_caps_at_five_and_counts_total() {
+        let porcelain = " M a.rs\n M b.rs\n?? c.rs\n?? d.rs\n?? e.rs\n?? f.rs\n";
+        let sample = parse_status_porcelain(porcelain, 5);
+        assert_eq!(sample.total, 6);
+        assert_eq!(sample.paths.len(), 5);
+        assert_eq!(sample.paths[0], "a.rs");
+        assert!(sample.is_dirty());
+    }
+
+    #[test]
+    fn parse_status_empty_is_clean() {
+        let sample = parse_status_porcelain("", 5);
+        assert!(!sample.is_dirty());
+        assert!(sample.paths.is_empty());
+    }
+
+    #[test]
+    fn concurrent_list_preserves_input_order() {
+        let first_base = temp_dir("gw_conc_a");
+        let second_base = temp_dir("gw_conc_b");
+        let _ = fs::remove_dir_all(&first_base);
+        let _ = fs::remove_dir_all(&second_base);
+        init_repo(&first_base);
+        init_repo(&second_base);
+        let clones = vec![
+            first_base.canonicalize().unwrap(),
+            second_base.canonicalize().unwrap(),
+        ];
+        let listed = list_worktrees_for_clones(&clones);
+        assert_eq!(listed.len(), 2);
+        assert_eq!(listed[0].0, clones[0]);
+        assert_eq!(listed[1].0, clones[1]);
+        assert!(listed[0].1.is_ok());
+        assert!(listed[1].1.is_ok());
+        let _ = fs::remove_dir_all(&first_base);
+        let _ = fs::remove_dir_all(&second_base);
+    }
+
+    #[test]
+    fn remove_worktree_force_deletes_dirty_linked_tree() {
+        let base = temp_dir("gw_remove_wt");
+        let _ = fs::remove_dir_all(&base);
+        fs::create_dir_all(&base).unwrap();
+        let repo = base.join("repo");
+        let linked = base.join("feature_wt");
+        init_repo(&repo);
+        run_git(&repo, &["branch", "feature"]);
+        run_git(
+            &repo,
+            &["worktree", "add", linked.to_str().unwrap(), "feature"],
+        );
+        fs::write(linked.join("dirty.txt"), "nope").unwrap();
+        remove_worktree(&repo, &linked, true).unwrap();
+        assert!(!linked.exists());
+        let remaining = list_worktrees(&repo).unwrap();
+        assert_eq!(remaining.len(), 1);
         let _ = fs::remove_dir_all(&base);
     }
 }

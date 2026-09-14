@@ -8,5 +8,4 @@ pub mod merge_po;
 pub mod shim;
 pub mod staging;
 pub mod stash_and_checkout;
-#[allow(dead_code)] // wired in the worktree-list commit
 pub mod worktree_list;

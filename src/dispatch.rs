@@ -14,6 +14,7 @@ pub const SUBCOMMANDS: &[&str] = &[
     "changes",
     "shim",
     "unshim",
+    "worktree-list",
 ];
 
 /// Returns (subcommand, rest_args). If invoked as git-whistles, subcommand is None and
@@ -103,5 +104,12 @@ mod tests {
             resolve_subcommand_and_args_from(&strings(&["mystery-binary", "changes"]));
         assert_eq!(subcommand, None);
         assert_eq!(args, vec!["changes"]);
+    }
+
+    #[test]
+    fn git_worktree_list_symlink_resolves_subcommand() {
+        let (subcommand, args) = resolve_subcommand_and_args_from(&strings(&["git-worktree-list"]));
+        assert_eq!(subcommand, Some("worktree-list"));
+        assert!(args.is_empty());
     }
 }

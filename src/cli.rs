@@ -43,6 +43,9 @@ enum Commands {
     Shim(cmd::shim::ShimArgs),
     /// Remove symlinks previously created by shim
     Unshim(cmd::shim::UnshimArgs),
+    /// Interactive list of worktrees across remembered clones
+    #[command(name = "worktree-list")]
+    WorktreeList(cmd::worktree_list::WorktreeListArgs),
 }
 
 pub struct Cli;
@@ -68,6 +71,7 @@ impl Cli {
             Some(Commands::Changes(a)) => cmd::changes::run(a),
             Some(Commands::Shim(a)) => cmd::shim::run_shim(a),
             Some(Commands::Unshim(a)) => cmd::shim::run_unshim(a),
+            Some(Commands::WorktreeList(a)) => cmd::worktree_list::run(a),
             None => {
                 // Surface a real help message when argv resolution leaves us without a subcommand.
                 let mut command = CliApp::command();

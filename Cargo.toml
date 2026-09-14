@@ -8,6 +8,7 @@ repository = "https://github.com/mezis/git-whistles"
 
 [dependencies]
 clap = { version = "4.4", features = ["derive"] }
+ratatui = "0.30"
 tempfile = "3.10"
 
 [profile.release]
