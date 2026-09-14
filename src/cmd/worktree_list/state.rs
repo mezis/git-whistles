@@ -298,8 +298,17 @@ impl PickerState {
 
 /// `cwd` is the worktree itself or a directory inside it.
 pub fn cwd_is_inside(cwd: &Path, worktree: &Path) -> bool {
-    if let (Ok(cwd), Ok(root)) = (cwd.canonicalize(), worktree.canonicalize()) {
-        return cwd == root || cwd.starts_with(&root);
+    let cwd_canonical = cwd.canonicalize().ok();
+    cwd_is_inside_with_canonical_cwd(cwd, cwd_canonical.as_deref(), worktree)
+}
+
+fn cwd_is_inside_with_canonical_cwd(
+    cwd: &Path,
+    cwd_canonical: Option<&Path>,
+    worktree: &Path,
+) -> bool {
+    if let (Some(cwd), Ok(root)) = (cwd_canonical, worktree.canonicalize()) {
+        return cwd == root.as_path() || cwd.starts_with(&root);
     }
     cwd == worktree || cwd.starts_with(worktree)
 }
@@ -309,16 +318,22 @@ pub fn rows_from_listings(
     listings: Vec<(PathBuf, Result<Vec<crate::worktree::Worktree>, String>)>,
     cwd: &Path,
 ) -> (Vec<PickerRow>, Vec<String>) {
+    let cwd_canonical = cwd.canonicalize().ok();
     let mut warnings = Vec::new();
     let mut rows = Vec::new();
     for (clone, result) in listings {
         match result {
             Ok(trees) => {
+                let clone_canonical = clone.canonicalize().ok();
                 for tree in trees {
                     if tree.is_bare {
                         continue;
                     }
-                    let is_main = same_path(&tree.path, &clone);
+                    let is_main = same_path_with_canonical_right(
+                        &tree.path,
+                        &clone,
+                        clone_canonical.as_deref(),
+                    );
                     rows.push(PickerRow::new(
                         clone.clone(),
                         tree.path,
@@ -333,16 +348,23 @@ pub fn rows_from_listings(
             }
         }
     }
-    if let Some(index) = rows.iter().position(|row| cwd_is_inside(cwd, &row.path)) {
+    if let Some(index) = rows
+        .iter()
+        .position(|row| cwd_is_inside_with_canonical_cwd(cwd, cwd_canonical.as_deref(), &row.path))
+    {
         let current = rows.remove(index);
         rows.insert(0, current);
     }
     (rows, warnings)
 }
 
-fn same_path(left: &Path, right: &Path) -> bool {
-    match (left.canonicalize(), right.canonicalize()) {
-        (Ok(left), Ok(right)) => left == right,
+fn same_path_with_canonical_right(
+    left: &Path,
+    right: &Path,
+    right_canonical: Option<&Path>,
+) -> bool {
+    match (left.canonicalize().ok(), right_canonical) {
+        (Some(left), Some(right)) => left.as_path() == right,
         _ => left == right,
     }
 }
