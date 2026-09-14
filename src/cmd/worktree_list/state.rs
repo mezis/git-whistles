@@ -291,8 +291,19 @@ impl PickerState {
     }
 
     fn after_filter_edit(&mut self) -> Action {
-        self.selected = 0;
+        let previous_row = self.visible_indices.get(self.selected).copied();
         self.rebuild_visible();
+        if let Some(row_index) = previous_row {
+            if let Some(visible_at) = self
+                .visible_indices
+                .iter()
+                .position(|&index| index == row_index)
+            {
+                self.selected = visible_at;
+            } else {
+                self.selected = 0;
+            }
+        }
         Action::None
     }
 
@@ -373,15 +384,18 @@ pub fn rows_from_listings(
                         (Some(tree), Some(clone_root)) => tree == clone_root,
                         _ => tree.path == clone,
                     };
-                    if cwd_index.is_none()
-                        && cwd_is_inside_with_canonicals(
-                            cwd,
-                            cwd_canonical.as_deref(),
-                            &tree.path,
-                            tree_canonical.as_deref(),
-                        )
+                    let tree_len = tree_canonical
+                        .as_ref()
+                        .map(|path| path.as_os_str().len())
+                        .unwrap_or_else(|| tree.path.as_os_str().len());
+                    if cwd_is_inside_with_canonicals(
+                        cwd,
+                        cwd_canonical.as_deref(),
+                        &tree.path,
+                        tree_canonical.as_deref(),
+                    ) && cwd_index.map(|(_, len)| tree_len > len).unwrap_or(true)
                     {
-                        cwd_index = Some(rows.len());
+                        cwd_index = Some((rows.len(), tree_len));
                     }
                     rows.push(PickerRow::new(
                         clone.clone(),
@@ -397,7 +411,7 @@ pub fn rows_from_listings(
             }
         }
     }
-    if let Some(index) = cwd_index {
+    if let Some((index, _)) = cwd_index {
         let current = rows.remove(index);
         rows.insert(0, current);
     }
@@ -542,5 +556,42 @@ mod tests {
             .map(|row| row.path.as_path())
             .collect();
         assert_eq!(paths, vec![Path::new("/wt/a"), Path::new("/wt/c")]);
+    }
+
+    #[test]
+    fn filter_keeps_selection_when_row_still_matches() {
+        let mut state = picker();
+        state.handle_key(Key::Down);
+        assert_eq!(state.selected(), 1);
+        state.handle_key(Key::FilterChar('p'));
+        assert_eq!(state.selected(), 1);
+        assert_eq!(state.visible()[1].branch.as_deref(), Some("feature"));
+    }
+
+    fn listing_tree(path: &str, branch: &str) -> crate::worktree::Worktree {
+        crate::worktree::Worktree {
+            path: PathBuf::from(path),
+            branch: Some(branch.to_string()),
+            locked: false,
+            is_bare: false,
+        }
+    }
+
+    #[test]
+    fn rows_from_listings_floats_longest_cwd_match() {
+        let listings = vec![
+            (
+                PathBuf::from("/repos/app"),
+                Ok(vec![listing_tree("/repos/app", "main")]),
+            ),
+            (
+                PathBuf::from("/repos/app/vendor/lib"),
+                Ok(vec![listing_tree("/repos/app/vendor/lib", "main")]),
+            ),
+        ];
+        let (rows, warnings) = rows_from_listings(listings, Path::new("/repos/app/vendor/lib/src"));
+        assert!(warnings.is_empty());
+        assert_eq!(rows[0].path, PathBuf::from("/repos/app/vendor/lib"));
+        assert_eq!(rows[1].path, PathBuf::from("/repos/app"));
     }
 }
