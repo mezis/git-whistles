@@ -11,7 +11,6 @@ use ratatui::crossterm::terminal::{
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Clear, Paragraph};
 
-use super::filter::subsequence_char_indices;
 use super::state::{Action, Key, PickerRow, PickerState};
 use super::teardown::{self, StderrStreamingRunner, TeardownPlan};
 use crate::worktree::{self, DirtySample};
@@ -173,9 +172,12 @@ fn draw(frame: &mut Frame, state: &PickerState) {
     let visible = state.visible();
     let mut lines: Vec<Line> = Vec::new();
     for (index, row) in visible.iter().enumerate() {
-        let line = row.display_line();
-        let matched = subsequence_char_indices(&line, state.filter()).unwrap_or_default();
-        lines.push(highlighted_line(&line, &matched, index == state.selected()));
+        let matched = state.match_indices(index);
+        lines.push(highlighted_line(
+            row.display_line(),
+            matched,
+            index == state.selected(),
+        ));
     }
     if lines.is_empty() {
         lines.push(Line::from("(no matching worktrees)"));
@@ -199,19 +201,43 @@ fn draw(frame: &mut Frame, state: &PickerState) {
 }
 
 fn highlighted_line(line: &str, matched: &[usize], selected: bool) -> Line<'static> {
-    let mut spans = Vec::new();
     let matched_set: std::collections::HashSet<usize> = matched.iter().copied().collect();
+    let mut spans = Vec::new();
+    let mut current = String::new();
+    let mut current_matched = false;
+    let mut started = false;
     for (char_index, character) in line.chars().enumerate() {
-        let mut style = Style::default();
-        if selected {
-            style = style.bg(Color::DarkGray);
+        let is_matched = matched_set.contains(&char_index);
+        if !started {
+            current_matched = is_matched;
+            started = true;
+        } else if is_matched != current_matched {
+            spans.push(Span::styled(
+                std::mem::take(&mut current),
+                highlight_style(selected, current_matched),
+            ));
+            current_matched = is_matched;
         }
-        if matched_set.contains(&char_index) {
-            style = style.fg(Color::Yellow).add_modifier(Modifier::BOLD);
-        }
-        spans.push(Span::styled(character.to_string(), style));
+        current.push(character);
+    }
+    if !current.is_empty() || spans.is_empty() {
+        spans.push(Span::styled(
+            current,
+            highlight_style(selected, current_matched),
+        ));
     }
     Line::from(spans)
+}
+
+fn highlight_style(selected: bool, matched: bool) -> Style {
+    let mut style = Style::default();
+    if selected {
+        style = style.bg(Color::DarkGray);
+    }
+    if matched {
+        style = style.fg(Color::Yellow).add_modifier(Modifier::BOLD);
+    }
+    style
 }
 
 fn draw_confirm(frame: &mut Frame, area: Rect, confirm: &super::state::ConfirmState) {

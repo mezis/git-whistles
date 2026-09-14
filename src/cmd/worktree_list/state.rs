@@ -19,18 +19,37 @@ pub struct PickerRow {
     pub locked: bool,
     /// This checkout is the clone's primary worktree (not a linked one).
     pub is_main: bool,
+    display_line: String,
 }
 
 impl PickerRow {
-    /// `{clone basename} {branch|detached} {path}` used for display and filtering.
-    pub fn display_line(&self) -> String {
-        let repo = self
-            .clone
+    /// Build a row and cache its display line for filtering and drawing.
+    pub fn new(
+        clone: PathBuf,
+        path: PathBuf,
+        branch: Option<String>,
+        locked: bool,
+        is_main: bool,
+    ) -> Self {
+        let repo = clone
             .file_name()
             .and_then(|name| name.to_str())
             .unwrap_or("");
-        let branch = self.branch.as_deref().unwrap_or("detached");
-        format!("{} {} {}", repo, branch, self.path.display())
+        let branch_label = branch.as_deref().unwrap_or("detached");
+        let display_line = format!("{} {} {}", repo, branch_label, path.display());
+        Self {
+            clone,
+            path,
+            branch,
+            locked,
+            is_main,
+            display_line,
+        }
+    }
+
+    /// `{clone basename} {branch|detached} {path}` used for display and filtering.
+    pub fn display_line(&self) -> &str {
+        &self.display_line
     }
 }
 
@@ -80,6 +99,10 @@ pub struct ConfirmState {
 pub struct PickerState {
     rows: Vec<PickerRow>,
     filter: String,
+    /// Indices into `rows` that match the current filter.
+    visible_indices: Vec<usize>,
+    /// Subsequence match char indices, parallel to `visible_indices`.
+    match_indices: Vec<Vec<usize>>,
     /// Index into the current visible list.
     selected: usize,
     confirm: Option<ConfirmState>,
@@ -90,21 +113,25 @@ pub struct PickerState {
 impl PickerState {
     /// Build a picker. `cwd` is used to refuse destroying the current worktree.
     pub fn new(rows: Vec<PickerRow>, cwd: PathBuf) -> Self {
-        Self {
+        let mut state = Self {
             rows,
             filter: String::new(),
+            visible_indices: Vec::new(),
+            match_indices: Vec::new(),
             selected: 0,
             confirm: None,
             refuse_message: None,
             cwd,
-        }
+        };
+        state.rebuild_visible();
+        state
     }
 
     /// Replace listed rows (after a successful destroy) and keep a valid selection.
     pub fn replace_rows(&mut self, rows: Vec<PickerRow>) {
         self.rows = rows;
         self.confirm = None;
-        self.clamp_selected();
+        self.rebuild_visible();
     }
 
     /// Current filter needle.
@@ -129,24 +156,36 @@ impl PickerState {
 
     /// Currently selected row among visible rows.
     pub fn selected_row(&self) -> Option<&PickerRow> {
-        let mut remaining = self.selected;
-        for row in &self.rows {
-            if subsequence_char_indices(&row.display_line(), &self.filter).is_some() {
-                if remaining == 0 {
-                    return Some(row);
-                }
-                remaining -= 1;
-            }
-        }
-        None
+        let row_index = *self.visible_indices.get(self.selected)?;
+        self.rows.get(row_index)
     }
 
     /// Visible rows: those whose display line subsequence-matches the filter.
     pub fn visible(&self) -> Vec<&PickerRow> {
-        self.rows
+        self.visible_indices
             .iter()
-            .filter(|row| subsequence_char_indices(&row.display_line(), &self.filter).is_some())
+            .map(|&index| &self.rows[index])
             .collect()
+    }
+
+    /// Cached subsequence highlights for visible row `visible_index`.
+    pub fn match_indices(&self, visible_index: usize) -> &[usize] {
+        self.match_indices
+            .get(visible_index)
+            .map(Vec::as_slice)
+            .unwrap_or(&[])
+    }
+
+    fn rebuild_visible(&mut self) {
+        self.visible_indices.clear();
+        self.match_indices.clear();
+        for (index, row) in self.rows.iter().enumerate() {
+            if let Some(matched) = subsequence_char_indices(row.display_line(), &self.filter) {
+                self.visible_indices.push(index);
+                self.match_indices.push(matched);
+            }
+        }
+        self.clamp_selected();
     }
 
     /// Apply a key. Domain-only; the UI fetches git status when this returns [`Action::OpenDestroyConfirm`].
@@ -163,7 +202,7 @@ impl PickerState {
                 Action::None
             }
             Key::Down => {
-                let last = self.visible().len().saturating_sub(1);
+                let last = self.visible_indices.len().saturating_sub(1);
                 if self.selected < last {
                     self.selected += 1;
                 }
@@ -181,12 +220,14 @@ impl PickerState {
             Key::Backspace => {
                 self.filter.pop();
                 self.selected = 0;
+                self.rebuild_visible();
                 Action::None
             }
             Key::FilterChar(filter_char) => {
                 if filter_char.is_ascii_alphanumeric() {
                     self.filter.push(filter_char);
                     self.selected = 0;
+                    self.rebuild_visible();
                 }
                 Action::None
             }
@@ -246,7 +287,7 @@ impl PickerState {
     }
 
     fn clamp_selected(&mut self) {
-        let visible_len = self.visible().len();
+        let visible_len = self.visible_indices.len();
         if visible_len == 0 {
             self.selected = 0;
         } else if self.selected >= visible_len {
@@ -278,13 +319,13 @@ pub fn rows_from_listings(
                         continue;
                     }
                     let is_main = same_path(&tree.path, &clone);
-                    rows.push(PickerRow {
-                        clone: clone.clone(),
-                        path: tree.path,
-                        branch: tree.branch,
-                        locked: tree.locked,
+                    rows.push(PickerRow::new(
+                        clone.clone(),
+                        tree.path,
+                        tree.branch,
+                        tree.locked,
                         is_main,
-                    });
+                    ));
                 }
             }
             Err(message) => {
@@ -311,13 +352,13 @@ mod tests {
     use super::*;
 
     fn row(clone: &str, path: &str, branch: &str, is_main: bool) -> PickerRow {
-        PickerRow {
-            clone: PathBuf::from(clone),
-            path: PathBuf::from(path),
-            branch: Some(branch.to_string()),
-            locked: false,
+        PickerRow::new(
+            PathBuf::from(clone),
+            PathBuf::from(path),
+            Some(branch.to_string()),
+            false,
             is_main,
-        }
+        )
     }
 
     fn picker() -> PickerState {
