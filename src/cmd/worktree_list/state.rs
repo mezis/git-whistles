@@ -89,6 +89,8 @@ pub enum Action {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConfirmState {
     pub dirty: DirtySample,
+    /// `git status` failed; shown instead of a clean/dirty summary.
+    pub status_error: Option<String>,
     pub locked: bool,
     pub plan: TeardownPlan,
     pub clone: PathBuf,
@@ -273,12 +275,18 @@ impl PickerState {
     }
 
     /// Fill the confirm overlay after the UI loaded dirty status and teardown detection.
-    pub fn begin_confirm(&mut self, dirty: DirtySample, plan: TeardownPlan) {
+    pub fn begin_confirm(
+        &mut self,
+        dirty: DirtySample,
+        plan: TeardownPlan,
+        status_error: Option<String>,
+    ) {
         let Some(row) = self.selected_row() else {
             return;
         };
         self.confirm = Some(ConfirmState {
             dirty,
+            status_error,
             locked: row.locked,
             plan,
             clone: row.clone.clone(),
@@ -460,8 +468,9 @@ mod tests {
                 total: 1,
             },
             TeardownPlan::default(),
+            None,
         );
-        assert!(state.confirm().is_some());
+        assert!(state.confirm().unwrap().status_error.is_none());
         state.handle_key(Key::Esc);
         assert!(state.confirm().is_none());
         state.handle_key(Key::CtrlD);
@@ -471,6 +480,11 @@ mod tests {
                 total: 0,
             },
             TeardownPlan::default(),
+            Some("git status failed: boom".to_string()),
+        );
+        assert_eq!(
+            state.confirm().unwrap().status_error.as_deref(),
+            Some("git status failed: boom")
         );
         match state.handle_key(Key::Enter) {
             Action::Destroy { path, force, .. } => {

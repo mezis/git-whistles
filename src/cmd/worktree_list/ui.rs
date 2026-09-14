@@ -47,12 +47,18 @@ fn event_loop(
             Action::OpenDestroyConfirm => {
                 let selected_path = state.selected_row().map(|row| row.path.clone());
                 if let Some(path) = selected_path {
-                    let dirty = worktree::status_sample(&path, 5).unwrap_or(DirtySample {
-                        paths: Vec::new(),
-                        total: 0,
-                    });
                     let plan = teardown::detect(&path);
-                    state.begin_confirm(dirty, plan);
+                    match worktree::status_sample(&path, 5) {
+                        Ok(dirty) => state.begin_confirm(dirty, plan, None),
+                        Err(message) => state.begin_confirm(
+                            DirtySample {
+                                paths: Vec::new(),
+                                total: 0,
+                            },
+                            plan,
+                            Some(message),
+                        ),
+                    }
                 }
             }
             Action::Destroy {
@@ -252,7 +258,9 @@ fn draw_confirm(frame: &mut Frame, area: Rect, confirm: &super::state::ConfirmSt
         format!("Destroy worktree {} ({basename})?", confirm.path.display()),
         String::new(),
     ];
-    if confirm.dirty.is_dirty() {
+    if let Some(error) = &confirm.status_error {
+        text.push(format!("Could not read git status: {error}"));
+    } else if confirm.dirty.is_dirty() {
         text.push("This worktree has uncommitted changes:".to_string());
         for path in &confirm.dirty.paths {
             text.push(format!("  {path}"));
