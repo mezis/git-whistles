@@ -96,6 +96,7 @@ pub struct ConfirmState {
     pub plan: TeardownPlan,
     pub clone: PathBuf,
     pub path: PathBuf,
+    pub branch: Option<String>,
 }
 
 /// Filterable list + optional destroy confirmation.
@@ -312,6 +313,7 @@ impl PickerState {
             plan,
             clone: row.clone.clone(),
             path: row.path.clone(),
+            branch: row.branch.clone(),
         });
     }
 

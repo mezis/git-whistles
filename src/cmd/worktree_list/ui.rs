@@ -267,17 +267,14 @@ fn highlight_style(selected: bool, matched: bool) -> Style {
 fn draw_confirm(frame: &mut Frame, area: Rect, confirm: &super::state::ConfirmState) {
     let popup = centered_rect(area, 70, 60);
     frame.render_widget(Clear, popup);
-    let basename = confirm
-        .path
-        .file_name()
-        .and_then(|name| name.to_str())
-        .unwrap_or("");
+    let branch = confirm.branch.as_deref().unwrap_or("detached");
     let mut text = vec![
-        format!("Destroy worktree {} ({basename})?", confirm.path.display()),
+        format!("Destroy worktree {} ({branch})?", confirm.path.display()),
         String::new(),
     ];
     if let Some(error) = &confirm.status_error {
         text.push(format!("Could not read git status: {error}"));
+        text.push("Confirm uses --force.".to_string());
     } else if confirm.dirty.is_dirty() {
         text.push("This worktree has uncommitted changes:".to_string());
         for path in &confirm.dirty.paths {
