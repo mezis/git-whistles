@@ -60,6 +60,7 @@ fn event_loop(
                             Some(message),
                         ),
                     }
+                    drain_pending_keys()?;
                 }
             }
             Action::Destroy {
@@ -175,11 +176,23 @@ fn key_from_event(event: KeyEvent) -> Key {
         KeyCode::Backspace => Key::Backspace,
         KeyCode::Char('c') if event.modifiers.contains(KeyModifiers::CONTROL) => Key::CtrlC,
         KeyCode::Char('d') if event.modifiers.contains(KeyModifiers::CONTROL) => Key::CtrlD,
-        KeyCode::Char(filter_char) if filter_char.is_ascii_alphanumeric() => {
+        KeyCode::Char(filter_char)
+            if filter_char.is_ascii_alphanumeric()
+                && !event
+                    .modifiers
+                    .intersects(KeyModifiers::CONTROL | KeyModifiers::ALT) =>
+        {
             Key::FilterChar(filter_char)
         }
         _ => Key::Other,
     }
+}
+
+fn drain_pending_keys() -> Result<(), String> {
+    while event::poll(std::time::Duration::ZERO).map_err(|err| err.to_string())? {
+        let _ = event::read().map_err(|err| err.to_string())?;
+    }
+    Ok(())
 }
 
 fn draw(frame: &mut Frame, state: &PickerState) {
@@ -195,12 +208,16 @@ fn draw(frame: &mut Frame, state: &PickerState) {
 
     let visible = state.visible();
     let mut lines: Vec<Line> = Vec::new();
-    for (index, row) in visible.iter().enumerate() {
+    let list_inner_height = chunks[0].height.saturating_sub(2) as usize;
+    let window = list_inner_height.max(1);
+    let selected = state.selected();
+    let start = selected.saturating_sub(window.saturating_sub(1));
+    for (index, row) in visible.iter().enumerate().skip(start).take(window) {
         let matched = state.match_indices(index);
         lines.push(highlighted_line(
             row.display_line(),
             matched,
-            index == state.selected(),
+            index == selected,
         ));
     }
     if lines.is_empty() {
