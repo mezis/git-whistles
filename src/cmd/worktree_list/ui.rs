@@ -17,8 +17,9 @@ use crate::worktree::{self, DirtySample};
 
 /// Run the picker. `Some(path)` if the user confirmed a selection.
 pub fn run(rows: Vec<PickerRow>, cwd: PathBuf) -> Result<Option<PathBuf>, String> {
-    let mut terminal = start_terminal()?;
+    install_panic_hook();
     let restore = TtyRestore;
+    let mut terminal = start_terminal()?;
     let mut state = PickerState::new(rows, cwd);
     let outcome = event_loop(&mut terminal, &mut state);
     drop(restore);
@@ -127,10 +128,22 @@ struct TtyRestore;
 
 impl Drop for TtyRestore {
     fn drop(&mut self) {
-        let _ = disable_raw_mode();
-        if let Ok(mut tty) = open_tty() {
-            let _ = execute!(tty, LeaveAlternateScreen);
-        }
+        restore_tty();
+    }
+}
+
+fn install_panic_hook() {
+    let previous = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        restore_tty();
+        previous(info);
+    }));
+}
+
+fn restore_tty() {
+    let _ = disable_raw_mode();
+    if let Ok(mut tty) = open_tty() {
+        let _ = execute!(tty, LeaveAlternateScreen);
     }
 }
 
