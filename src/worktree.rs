@@ -19,8 +19,7 @@ pub struct Worktree {
 
 /// List worktrees for the repository that contains `clone` (untrimmed porcelain).
 pub fn list_worktrees(clone: &Path) -> Result<Vec<Worktree>, String> {
-    let out = git::run_git_in(clone, &["worktree", "list", "--porcelain"])
-        .map_err(|err| err.to_string())?;
+    let out = git::run_git_captured_in(clone, &["worktree", "list", "--porcelain"])?;
     if !out.status.success() {
         let stderr = String::from_utf8_lossy(&out.stderr);
         return Err(format!("git worktree list failed: {}", stderr.trim()));
@@ -186,8 +185,7 @@ impl DirtySample {
 
 /// Sample dirty paths in `worktree`, keeping at most `limit` names.
 pub fn status_sample(worktree: &Path, limit: usize) -> Result<DirtySample, String> {
-    let out = git::run_git_in(worktree, &["status", "--porcelain", "-uall"])
-        .map_err(|err| err.to_string())?;
+    let out = git::run_git_captured_in(worktree, &["status", "--porcelain", "-uall"])?;
     if !out.status.success() {
         let stderr = String::from_utf8_lossy(&out.stderr);
         return Err(format!("git status failed: {}", stderr.trim()));

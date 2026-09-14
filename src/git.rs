@@ -55,6 +55,11 @@ pub fn run_git_in(repo: &Path, args: &[&str]) -> std::io::Result<Output> {
     }
 }
 
+/// Same as [`run_git_in`], mapping I/O errors to a string.
+pub fn run_git_captured_in(repo: &Path, args: &[&str]) -> Result<Output, String> {
+    run_git_in(repo, args).map_err(|err| err.to_string())
+}
+
 /// Run git in another working tree; return trimmed stdout (not for porcelain).
 pub fn run_git_stdout_in(repo: &Path, args: &[&str]) -> Result<String, String> {
     let full = git_args_in(repo, args)?;
@@ -63,7 +68,7 @@ pub fn run_git_stdout_in(repo: &Path, args: &[&str]) -> Result<String, String> {
 
 /// Captured git side-effect in another working tree (never inherits stdout).
 pub fn run_git_ok_captured_in(repo: &Path, args: &[&str]) -> Result<(), String> {
-    let out = run_git_in(repo, args).map_err(|err| err.to_string())?;
+    let out = run_git_captured_in(repo, args)?;
     if out.status.success() {
         Ok(())
     } else {

@@ -47,16 +47,13 @@ impl KnownClones {
                 continue;
             }
             let candidate = PathBuf::from(trimmed);
-            if !candidate.exists() {
-                continue;
-            }
-            let Ok(canonical) = candidate.canonicalize() else {
+            let Ok(clone) = MainClone::from_path(candidate) else {
                 continue;
             };
-            if !seen.insert(canonical.clone()) {
+            if !seen.insert(clone.path().to_path_buf()) {
                 continue;
             }
-            clones.push(MainClone { path: canonical });
+            clones.push(clone);
         }
         Ok(Self { clones })
     }
@@ -113,20 +110,27 @@ mod tests {
     use super::*;
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    fn temp_file(prefix: &str) -> PathBuf {
-        let unique = SystemTime::now()
+    fn unique_nanos() -> u128 {
+        SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
-            .as_nanos();
-        std::env::temp_dir().join(format!("{prefix}_{}_{}.txt", std::process::id(), unique))
+            .as_nanos()
+    }
+
+    fn temp_file(prefix: &str) -> PathBuf {
+        std::env::temp_dir().join(format!(
+            "{prefix}_{}_{}.txt",
+            std::process::id(),
+            unique_nanos()
+        ))
     }
 
     fn temp_dir(prefix: &str) -> PathBuf {
-        let unique = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_nanos();
-        let dir = std::env::temp_dir().join(format!("{prefix}_{}_{}", std::process::id(), unique));
+        let dir = std::env::temp_dir().join(format!(
+            "{prefix}_{}_{}",
+            std::process::id(),
+            unique_nanos()
+        ));
         fs::create_dir_all(&dir).unwrap();
         dir
     }
@@ -156,13 +160,6 @@ mod tests {
         );
         let _ = fs::remove_file(&path);
         let _ = fs::remove_dir_all(&existing);
-    }
-
-    fn unique_nanos() -> u128 {
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_nanos()
     }
 
     #[test]

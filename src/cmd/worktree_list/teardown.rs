@@ -80,16 +80,13 @@ pub fn run_plan<Runner: CommandRunner>(
         runner.run_in(worktree, "docker", &["compose", "down"])?;
     }
     if let Some(script) = &plan.teardown {
+        let program = script
+            .to_str()
+            .ok_or_else(|| "teardown path is not valid UTF-8".to_string())?;
         if is_executable(script) {
-            let program = script
-                .to_str()
-                .ok_or_else(|| "teardown path is not valid UTF-8".to_string())?;
             runner.run_in(worktree, program, &[])?;
         } else {
-            let script_str = script
-                .to_str()
-                .ok_or_else(|| "teardown path is not valid UTF-8".to_string())?;
-            runner.run_in(worktree, "bash", &[script_str])?;
+            runner.run_in(worktree, "bash", &[program])?;
         }
     }
     Ok(())

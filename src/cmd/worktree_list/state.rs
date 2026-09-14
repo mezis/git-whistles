@@ -235,17 +235,15 @@ impl PickerState {
             Key::CtrlD => self.ctrl_d(),
             Key::Backspace => {
                 self.filter.pop();
-                self.selected = 0;
-                self.rebuild_visible();
-                Action::None
+                self.after_filter_edit()
             }
             Key::FilterChar(filter_char) => {
                 if filter_char.is_ascii_alphanumeric() {
                     self.filter.push(filter_char);
-                    self.selected = 0;
-                    self.rebuild_visible();
+                    self.after_filter_edit()
+                } else {
+                    Action::None
                 }
-                Action::None
             }
             Key::Other => Action::None,
         }
@@ -289,6 +287,12 @@ impl PickerState {
         Action::OpenDestroyConfirm
     }
 
+    fn after_filter_edit(&mut self) -> Action {
+        self.selected = 0;
+        self.rebuild_visible();
+        Action::None
+    }
+
     /// Fill the confirm overlay after the UI loaded dirty status and teardown detection.
     pub fn begin_confirm(
         &mut self,
@@ -322,16 +326,23 @@ impl PickerState {
 /// `cwd` is the worktree itself or a directory inside it.
 pub fn cwd_is_inside(cwd: &Path, worktree: &Path) -> bool {
     let cwd_canonical = cwd.canonicalize().ok();
-    cwd_is_inside_with_canonical_cwd(cwd, cwd_canonical.as_deref(), worktree)
+    let worktree_canonical = worktree.canonicalize().ok();
+    cwd_is_inside_with_canonicals(
+        cwd,
+        cwd_canonical.as_deref(),
+        worktree,
+        worktree_canonical.as_deref(),
+    )
 }
 
-fn cwd_is_inside_with_canonical_cwd(
+fn cwd_is_inside_with_canonicals(
     cwd: &Path,
     cwd_canonical: Option<&Path>,
     worktree: &Path,
+    worktree_canonical: Option<&Path>,
 ) -> bool {
-    if let (Some(cwd), Ok(root)) = (cwd_canonical, worktree.canonicalize()) {
-        return cwd == root.as_path() || cwd.starts_with(&root);
+    if let (Some(cwd), Some(root)) = (cwd_canonical, worktree_canonical) {
+        return cwd == root || cwd.starts_with(root);
     }
     cwd == worktree || cwd.starts_with(worktree)
 }
@@ -344,6 +355,7 @@ pub fn rows_from_listings(
     let cwd_canonical = cwd.canonicalize().ok();
     let mut warnings = Vec::new();
     let mut rows = Vec::new();
+    let mut cwd_index = None;
     for (clone, result) in listings {
         match result {
             Ok(trees) => {
@@ -352,11 +364,21 @@ pub fn rows_from_listings(
                     if tree.is_bare {
                         continue;
                     }
-                    let is_main = same_path_with_canonical_right(
-                        &tree.path,
-                        &clone,
-                        clone_canonical.as_deref(),
-                    );
+                    let tree_canonical = tree.path.canonicalize().ok();
+                    let is_main = match (tree_canonical.as_deref(), clone_canonical.as_deref()) {
+                        (Some(tree), Some(clone_root)) => tree == clone_root,
+                        _ => tree.path == clone,
+                    };
+                    if cwd_index.is_none()
+                        && cwd_is_inside_with_canonicals(
+                            cwd,
+                            cwd_canonical.as_deref(),
+                            &tree.path,
+                            tree_canonical.as_deref(),
+                        )
+                    {
+                        cwd_index = Some(rows.len());
+                    }
                     rows.push(PickerRow::new(
                         clone.clone(),
                         tree.path,
@@ -371,25 +393,11 @@ pub fn rows_from_listings(
             }
         }
     }
-    if let Some(index) = rows
-        .iter()
-        .position(|row| cwd_is_inside_with_canonical_cwd(cwd, cwd_canonical.as_deref(), &row.path))
-    {
+    if let Some(index) = cwd_index {
         let current = rows.remove(index);
         rows.insert(0, current);
     }
     (rows, warnings)
-}
-
-fn same_path_with_canonical_right(
-    left: &Path,
-    right: &Path,
-    right_canonical: Option<&Path>,
-) -> bool {
-    match (left.canonicalize().ok(), right_canonical) {
-        (Some(left), Some(right)) => left.as_path() == right,
-        _ => left == right,
-    }
 }
 
 #[cfg(test)]
