@@ -10,6 +10,7 @@ mod cmd;
 mod dispatch;
 mod exec;
 mod git;
+mod worktree;
 
 use cli::Cli;
 use dispatch::resolve_subcommand_and_args;

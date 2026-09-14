@@ -27,56 +27,63 @@ pub fn run_git_ok(args: &[&str]) -> Result<(), String> {
     exec::git_side_effect(args)
 }
 
-/// Run git with `-C` so commands execute in another working tree of the same repo.
-pub fn run_git_ok_in(repo: &Path, args: &[&str]) -> Result<(), String> {
-    let repo_str = repo
-        .to_str()
-        .ok_or_else(|| "worktree path is not valid UTF-8".to_string())?;
+/// UTF-8 path for `git -C`, or an error if the path is not valid Unicode.
+fn repo_as_str(repo: &Path) -> Result<&str, String> {
+    repo.to_str()
+        .ok_or_else(|| "worktree path is not valid UTF-8".to_string())
+}
+
+/// Prepend `git -C <repo>` to `args`.
+fn git_args_in<'a>(repo: &'a Path, args: &'a [&'a str]) -> Result<Vec<&'a str>, String> {
+    let repo_str = repo_as_str(repo)?;
     let mut full: Vec<&str> = vec!["-C", repo_str];
     full.extend_from_slice(args);
+    Ok(full)
+}
+
+/// Run git with `-C` so commands execute in another working tree of the same repo.
+pub fn run_git_ok_in(repo: &Path, args: &[&str]) -> Result<(), String> {
+    let full = git_args_in(repo, args)?;
     run_git_ok(&full)
+}
+
+/// Fully captured git in another working tree (porcelain: do not trim stdout).
+pub fn run_git_in(repo: &Path, args: &[&str]) -> std::io::Result<Output> {
+    match git_args_in(repo, args) {
+        Ok(full) => run_git(&full),
+        Err(err) => Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, err)),
+    }
+}
+
+/// Run git in another working tree; return trimmed stdout (not for porcelain).
+pub fn run_git_stdout_in(repo: &Path, args: &[&str]) -> Result<String, String> {
+    let full = git_args_in(repo, args)?;
+    run_git_stdout(&full)
 }
 
 /// Top-level directory of the current worktree (canonicalized).
 pub fn worktree_root() -> Result<PathBuf, String> {
-    let raw = run_git_stdout(&["rev-parse", "--show-toplevel"])?;
+    worktree_root_in(Path::new("."))
+}
+
+/// Top-level directory of the worktree at `repo` (canonicalized).
+pub fn worktree_root_in(repo: &Path) -> Result<PathBuf, String> {
+    let raw = run_git_stdout_in(repo, &["rev-parse", "--show-toplevel"])?;
     PathBuf::from(raw).canonicalize().map_err(|e| e.to_string())
 }
 
 /// If `branch` is checked out in a linked worktree other than the current one, return that path.
 pub fn other_worktree_path_for_branch(branch: &str) -> Result<Option<PathBuf>, String> {
-    let want = format!("refs/heads/{branch}");
     let here = worktree_root()?;
-    let porcelain = run_git_stdout(&["worktree", "list", "--porcelain"])?;
-    let mut blocks: Vec<(PathBuf, Option<String>)> = Vec::new();
-    let mut cur_path: Option<PathBuf> = None;
-    let mut cur_branch: Option<String> = None;
-    for line in porcelain.lines() {
-        if line.is_empty() {
-            if let Some(p) = cur_path.take() {
-                blocks.push((p, cur_branch.take()));
-            }
+    let trees = crate::worktree::list_worktrees(&here)?;
+    for tree in trees {
+        if tree.branch.as_deref() != Some(branch) {
             continue;
         }
-        if let Some(p) = line.strip_prefix("worktree ") {
-            if let Some(old) = cur_path.take() {
-                blocks.push((old, cur_branch.take()));
-            }
-            cur_path = Some(PathBuf::from(p));
-        } else if let Some(b) = line.strip_prefix("branch ") {
-            cur_branch = Some(b.trim().to_string());
-        }
-    }
-    if let Some(p) = cur_path.take() {
-        blocks.push((p, cur_branch.take()));
-    }
-    for (path, br) in blocks {
-        if br.as_deref() != Some(want.as_str()) {
-            continue;
-        }
-        let path = path
+        let path = tree
+            .path
             .canonicalize()
-            .map_err(|e| format!("worktree path {}: {}", path.display(), e))?;
+            .map_err(|e| format!("worktree path {}: {}", tree.path.display(), e))?;
         if path != here {
             return Ok(Some(path));
         }
