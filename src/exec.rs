@@ -39,6 +39,11 @@ fn shell_quote(s: &str) -> String {
     format!("'{}'", s.replace('\'', "'\"'\"'"))
 }
 
+/// Always wrap `value` in POSIX single quotes (`'` → `'\''`).
+pub fn posix_single_quote(value: &str) -> String {
+    format!("'{}'", value.replace('\'', "'\\''"))
+}
+
 /// Log `program` and `args` when echo mode is on.
 pub fn log_command(program: &str, args: &[&str]) {
     if !echo_commands_enabled() {

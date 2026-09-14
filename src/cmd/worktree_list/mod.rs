@@ -62,11 +62,10 @@ fn remember_current_clone() -> Result<(), String> {
 
 /// One eval-able line: `cd -- 'posix-quoted-path'`.
 pub fn cd_eval_line(path: &Path) -> String {
-    format!("cd -- {}", posix_single_quote(&path.to_string_lossy()))
-}
-
-fn posix_single_quote(value: &str) -> String {
-    format!("'{}'", value.replace('\'', "'\\''"))
+    format!(
+        "cd -- {}",
+        crate::exec::posix_single_quote(&path.to_string_lossy())
+    )
 }
 
 #[cfg(test)]
