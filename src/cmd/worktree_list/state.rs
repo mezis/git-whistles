@@ -63,7 +63,7 @@ pub enum Key {
     CtrlC,
     CtrlD,
     Backspace,
-    /// ASCII letter or digit already lowercased by the caller if needed.
+    /// ASCII letter or digit. Matching case-folds; the caller does not lowercase.
     FilterChar(char),
     Other,
 }
