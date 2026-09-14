@@ -261,7 +261,8 @@ impl PickerState {
                 let Some(confirm) = self.confirm.take() else {
                     return Action::None;
                 };
-                let force = confirm.dirty.is_dirty() || confirm.locked;
+                let force =
+                    confirm.dirty.is_dirty() || confirm.locked || confirm.status_error.is_some();
                 Action::Destroy {
                     clone: confirm.clone,
                     path: confirm.path,
@@ -503,7 +504,7 @@ mod tests {
         match state.handle_key(Key::Enter) {
             Action::Destroy { path, force, .. } => {
                 assert_eq!(path, PathBuf::from("/wt/b"));
-                assert!(!force);
+                assert!(force);
             }
             other => panic!("unexpected {other:?}"),
         }
