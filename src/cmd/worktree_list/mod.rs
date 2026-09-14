@@ -48,15 +48,17 @@ pub fn run(_args: WorktreeListArgs) -> Result<(), Box<dyn std::error::Error + Se
 
 fn remember_current_clone() -> Result<KnownClones, String> {
     let path = registry::registry_path()?;
+    let mut known = KnownClones::load(&path)?;
     if git::in_repo() {
-        let clone = worktree::main_clone_root()?;
-        let mut known = KnownClones::load(&path)?;
-        known.upsert_front(MainClone::from_path(clone)?);
-        known.save(&path)?;
-        Ok(known)
-    } else {
-        KnownClones::load(&path)
+        match worktree::main_clone_root() {
+            Ok(clone) => {
+                known.upsert_front(MainClone::from_path(clone)?);
+                known.save(&path)?;
+            }
+            Err(err) => eprintln!("warning: {err}"),
+        }
     }
+    Ok(known)
 }
 
 /// One eval-able line: `cd -- 'posix-quoted-path'`.

@@ -41,6 +41,10 @@ pub fn main_clone_root_in(repo: &Path) -> Result<PathBuf, String> {
     let git_dir_path = resolve_git_path(repo, &git_dir)?;
     let common_path = resolve_git_path(repo, &common_dir)?;
     if git_dir_path == common_path {
+        let bare = git::run_git_stdout_in(repo, &["rev-parse", "--is-bare-repository"])?;
+        if bare == "true" {
+            return Ok(common_path);
+        }
         return git::worktree_root_in(repo);
     }
     if common_path.file_name().and_then(|name| name.to_str()) == Some(".git") {
@@ -320,6 +324,17 @@ mod tests {
         let dir = temp_dir("gw_main_clone");
         let _ = fs::remove_dir_all(&dir);
         init_repo(&dir);
+        let root = main_clone_root_in(&dir).unwrap();
+        assert_eq!(root, dir.canonicalize().unwrap());
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn main_clone_root_of_bare_repo_is_the_common_dir() {
+        let dir = temp_dir("gw_bare_clone");
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        run_git(&dir, &["init", "--bare"]);
         let root = main_clone_root_in(&dir).unwrap();
         assert_eq!(root, dir.canonicalize().unwrap());
         let _ = fs::remove_dir_all(&dir);
