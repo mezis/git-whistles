@@ -81,6 +81,7 @@ pub enum Action {
         clone: PathBuf,
         path: PathBuf,
         force: bool,
+        locked: bool,
         plan: TeardownPlan,
     },
 }
@@ -265,6 +266,7 @@ impl PickerState {
                     clone: confirm.clone,
                     path: confirm.path,
                     force,
+                    locked: confirm.locked,
                     plan: confirm.plan,
                 }
             }

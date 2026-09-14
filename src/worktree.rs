@@ -219,16 +219,24 @@ fn porcelain_status_path(line: &str) -> Option<&str> {
     Some(line[3..].trim())
 }
 
-/// Remove a linked worktree. `force` maps to `git worktree remove --force`.
-pub fn remove_worktree(clone: &Path, worktree: &Path, force: bool) -> Result<(), String> {
+/// Remove a linked worktree. `force` is `--force`; locked trees need `--force` twice.
+pub fn remove_worktree(
+    clone: &Path,
+    worktree: &Path,
+    force: bool,
+    locked: bool,
+) -> Result<(), String> {
     let worktree_str = worktree
         .to_str()
         .ok_or_else(|| "worktree path is not valid UTF-8".to_string())?;
-    if force {
-        git::run_git_ok_captured_in(clone, &["worktree", "remove", "--force", worktree_str])
+    let args: Vec<&str> = if locked {
+        vec!["worktree", "remove", "--force", "--force", worktree_str]
+    } else if force {
+        vec!["worktree", "remove", "--force", worktree_str]
     } else {
-        git::run_git_ok_captured_in(clone, &["worktree", "remove", worktree_str])
-    }
+        vec!["worktree", "remove", worktree_str]
+    };
+    git::run_git_ok_captured_in(clone, &args)
 }
 
 #[cfg(test)]
@@ -393,7 +401,28 @@ mod tests {
             &["worktree", "add", linked.to_str().unwrap(), "feature"],
         );
         fs::write(linked.join("dirty.txt"), "nope").unwrap();
-        remove_worktree(&repo, &linked, true).unwrap();
+        remove_worktree(&repo, &linked, true, false).unwrap();
+        assert!(!linked.exists());
+        let remaining = list_worktrees(&repo).unwrap();
+        assert_eq!(remaining.len(), 1);
+        let _ = fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn remove_worktree_double_force_deletes_locked_linked_tree() {
+        let base = temp_dir("gw_remove_locked");
+        let _ = fs::remove_dir_all(&base);
+        fs::create_dir_all(&base).unwrap();
+        let repo = base.join("repo");
+        let linked = base.join("feature_wt");
+        init_repo(&repo);
+        run_git(&repo, &["branch", "feature"]);
+        run_git(
+            &repo,
+            &["worktree", "add", linked.to_str().unwrap(), "feature"],
+        );
+        run_git(&repo, &["worktree", "lock", linked.to_str().unwrap()]);
+        remove_worktree(&repo, &linked, true, true).unwrap();
         assert!(!linked.exists());
         let remaining = list_worktrees(&repo).unwrap();
         assert_eq!(remaining.len(), 1);

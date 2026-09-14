@@ -65,10 +65,11 @@ fn event_loop(
                 clone,
                 path,
                 force,
+                locked,
                 plan,
             } => {
                 suspend_terminal(terminal)?;
-                let destroy_result = destroy_worktree(&path, &clone, &plan, force);
+                let destroy_result = destroy_worktree(&path, &clone, &plan, force, locked);
                 resume_terminal(terminal)?;
                 if let Err(message) = destroy_result {
                     eprintln!("{message}");
@@ -92,9 +93,10 @@ fn destroy_worktree(
     clone: &Path,
     plan: &TeardownPlan,
     force: bool,
+    locked: bool,
 ) -> Result<(), String> {
     teardown::run_plan(path, plan, &StderrStreamingRunner)?;
-    worktree::remove_worktree(clone, path, force)
+    worktree::remove_worktree(clone, path, force, locked)
 }
 
 fn start_terminal() -> Result<Terminal<CrosstermBackend<std::fs::File>>, String> {
@@ -272,7 +274,7 @@ fn draw_confirm(frame: &mut Frame, area: Rect, confirm: &super::state::ConfirmSt
         text.push("No uncommitted changes (including untracked).".to_string());
     }
     if confirm.locked {
-        text.push("This worktree is locked; confirm uses --force.".to_string());
+        text.push("This worktree is locked; confirm uses --force --force.".to_string());
     }
     if !confirm.plan.is_empty() {
         text.push(will_run_line(&confirm.plan));
