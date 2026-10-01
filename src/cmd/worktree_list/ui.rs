@@ -3,6 +3,7 @@
 use std::fs::OpenOptions;
 use std::path::{Path, PathBuf};
 
+use ratatui::backend::ClearType;
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::crossterm::execute;
 use ratatui::crossterm::terminal::{
@@ -12,6 +13,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Clear, Paragraph};
 
 use super::state::{Action, Key, PickerRow, PickerState};
+use super::table::{self, TableLayout};
 use super::teardown::{self, StderrStreamingRunner, TeardownPlan};
 use crate::worktree::{self, DirtySample};
 
@@ -125,7 +127,15 @@ fn suspend_terminal(
 fn resume_terminal(terminal: &mut Terminal<CrosstermBackend<std::fs::File>>) -> Result<(), String> {
     enable_raw_mode().map_err(|err| err.to_string())?;
     execute!(terminal.backend_mut(), EnterAlternateScreen).map_err(|err| err.to_string())?;
-    terminal.clear().map_err(|err| err.to_string())?;
+    // Do not call Terminal::clear(): ratatui snapshots the cursor with
+    // crossterm::cursor::position(), which writes DSR (`ESC [ 6 n`) to stdout.
+    // worktree-list is meant to be eval'd, so that sequence becomes a bash command
+    // (`bash: $'\E[6n': command not found`) after the cursor-position timeout.
+    terminal
+        .backend_mut()
+        .clear_region(ClearType::All)
+        .map_err(|err| err.to_string())?;
+    terminal.swap_buffers();
     Ok(())
 }
 
@@ -208,19 +218,26 @@ fn draw(frame: &mut Frame, state: &PickerState) {
 
     let visible = state.visible();
     let mut lines: Vec<Line> = Vec::new();
+    let list_inner_width = chunks[0].width.saturating_sub(2) as usize;
     let list_inner_height = chunks[0].height.saturating_sub(2) as usize;
-    let window = list_inner_height.max(1);
+    let show_header = list_inner_height >= 2;
+    let window = if show_header {
+        list_inner_height.saturating_sub(1)
+    } else {
+        list_inner_height
+    }
+    .max(1);
+    let layout = TableLayout::from_rows(&visible, list_inner_width);
+    if show_header {
+        lines.push(header_line(&layout));
+    }
     let selected = state.selected();
     let start = selected.saturating_sub(window.saturating_sub(1));
     for (index, row) in visible.iter().enumerate().skip(start).take(window) {
         let matched = state.match_indices(index);
-        lines.push(highlighted_line(
-            row.display_line(),
-            matched,
-            index == selected,
-        ));
+        lines.push(table_row_line(row, matched, index == selected, &layout));
     }
-    if lines.is_empty() {
+    if visible.is_empty() {
         lines.push(Line::from("(no matching worktrees)"));
     }
     let list =
@@ -241,7 +258,64 @@ fn draw(frame: &mut Frame, state: &PickerState) {
     }
 }
 
-fn highlighted_line(line: &str, matched: &[usize], selected: bool) -> Line<'static> {
+fn header_line(layout: &TableLayout) -> Line<'static> {
+    let cells = layout.header_cells();
+    let style = Style::default().add_modifier(Modifier::BOLD | Modifier::DIM);
+    let gap = table::column_gap();
+    Line::from(vec![
+        Span::styled(cells[0].clone(), style),
+        Span::styled(gap, style),
+        Span::styled(cells[1].clone(), style),
+        Span::styled(gap, style),
+        Span::styled(cells[2].clone(), style),
+    ])
+}
+
+fn table_row_line(
+    row: &PickerRow,
+    matched: &[usize],
+    selected: bool,
+    layout: &TableLayout,
+) -> Line<'static> {
+    let cells = layout.row_cells(row);
+    let ranges = row.display_field_ranges();
+    let gap = table::column_gap();
+    let mut spans = Vec::new();
+    spans.extend(highlighted_spans(
+        &cells.repo,
+        &cells
+            .repo_fit
+            .remap_matches(&field_matches(matched, &ranges.repo)),
+        selected,
+    ));
+    spans.push(Span::styled(gap, highlight_style(selected, false)));
+    spans.extend(highlighted_spans(
+        &cells.branch,
+        &cells
+            .branch_fit
+            .remap_matches(&field_matches(matched, &ranges.branch)),
+        selected,
+    ));
+    spans.push(Span::styled(gap, highlight_style(selected, false)));
+    spans.extend(highlighted_spans(
+        &cells.path,
+        &cells
+            .path_fit
+            .remap_matches(&field_matches(matched, &ranges.path)),
+        selected,
+    ));
+    Line::from(spans)
+}
+
+fn field_matches(matched: &[usize], range: &std::ops::Range<usize>) -> Vec<usize> {
+    matched
+        .iter()
+        .filter(|index| range.contains(index))
+        .map(|index| index - range.start)
+        .collect()
+}
+
+fn highlighted_spans(line: &str, matched: &[usize], selected: bool) -> Vec<Span<'static>> {
     let matched_set: std::collections::HashSet<usize> = matched.iter().copied().collect();
     let mut spans = Vec::new();
     let mut current = String::new();
@@ -267,7 +341,7 @@ fn highlighted_line(line: &str, matched: &[usize], selected: bool) -> Line<'stat
             highlight_style(selected, current_matched),
         ));
     }
-    Line::from(spans)
+    spans
 }
 
 fn highlight_style(selected: bool, matched: bool) -> Style {

@@ -19,6 +19,7 @@ pub struct PickerRow {
     pub locked: bool,
     /// This checkout is the clone's primary worktree (not a linked one).
     pub is_main: bool,
+    repo: String,
     display_line: String,
 }
 
@@ -34,7 +35,8 @@ impl PickerRow {
         let repo = clone
             .file_name()
             .and_then(|name| name.to_str())
-            .unwrap_or("");
+            .unwrap_or("")
+            .to_string();
         let branch_label = branch.as_deref().unwrap_or("detached");
         let display_line = format!("{} {} {}", repo, branch_label, path.display());
         Self {
@@ -43,14 +45,49 @@ impl PickerRow {
             branch,
             locked,
             is_main,
+            repo,
             display_line,
         }
     }
 
-    /// `{clone basename} {branch|detached} {path}` used for display and filtering.
+    /// Clone directory basename (the repo column).
+    pub fn repo_name(&self) -> &str {
+        &self.repo
+    }
+
+    /// Short branch name, or `detached`.
+    pub fn branch_label(&self) -> &str {
+        self.branch.as_deref().unwrap_or("detached")
+    }
+
+    /// `{clone basename} {branch|detached} {path}` used for filtering (full path, not elided).
     pub fn display_line(&self) -> &str {
         &self.display_line
     }
+
+    /// Character ranges of repo, branch, and path inside [`Self::display_line`].
+    pub fn display_field_ranges(&self) -> DisplayFieldRanges {
+        let repo_chars = self.repo.chars().count();
+        let branch_chars = self.branch_label().chars().count();
+        let path_start = repo_chars + 1 + branch_chars + 1;
+        let path_chars = self.display_line.chars().count().saturating_sub(path_start);
+        DisplayFieldRanges {
+            repo: 0..repo_chars,
+            branch: (repo_chars + 1)..(repo_chars + 1 + branch_chars),
+            path: path_start..(path_start + path_chars),
+        }
+    }
+}
+
+/// Character index ranges into [`PickerRow::display_line`] for each table column.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DisplayFieldRanges {
+    /// Repo basename.
+    pub repo: std::ops::Range<usize>,
+    /// Branch label or `detached`.
+    pub branch: std::ops::Range<usize>,
+    /// Full worktree path (not elided).
+    pub path: std::ops::Range<usize>,
 }
 
 /// Keys the picker understands.
@@ -440,6 +477,23 @@ mod tests {
             ],
             PathBuf::from("/elsewhere"),
         )
+    }
+
+    #[test]
+    fn display_field_ranges_match_space_separated_line() {
+        let row = row("/repos/app", "/wt/a", "main", true);
+        assert_eq!(row.display_line(), "app main /wt/a");
+        let ranges = row.display_field_ranges();
+        assert_eq!(chars_in(row.display_line(), ranges.repo), "app");
+        assert_eq!(chars_in(row.display_line(), ranges.branch), "main");
+        assert_eq!(chars_in(row.display_line(), ranges.path), "/wt/a");
+    }
+
+    fn chars_in(line: &str, range: std::ops::Range<usize>) -> String {
+        line.chars()
+            .skip(range.start)
+            .take(range.end.saturating_sub(range.start))
+            .collect()
     }
 
     #[test]

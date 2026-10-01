@@ -3,6 +3,7 @@
 pub mod filter;
 pub mod registry;
 pub mod state;
+pub mod table;
 pub mod teardown;
 pub mod ui;
 

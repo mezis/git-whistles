@@ -57,7 +57,7 @@ git-changes -v
 
 - **`git list-branches [-l] [-r] [-i integration-branch] [-p]`** — List local or remote branches and their distance to an integration branch (default: same primary as `git changes`: `origin/HEAD` if set, else `origin/main` or `origin/master`). `-p` porcelain (CSV).
 
-- **`git worktree-list`** — Interactive list of worktrees from every main clone this command has been run in. Arrow keys move; typing letters/digits filters (subsequence match). **Enter** prints `cd -- 'path'` (use `eval "$(git-whistles worktree-list)"` or `eval "$(git worktree-list)"` after shim — quotes required). **Esc** prints nothing. **Ctrl-d** destroys a linked worktree after confirm (`docker compose down` and/or `bin/teardown` when present, then `git worktree remove`). Cannot destroy the main checkout or the worktree the shell is in.
+- **`git worktree-list`** — Interactive table of worktrees from every main clone this command has been run in (repo, branch, path; long paths elide the prefix). Arrow keys move; typing letters/digits filters (subsequence match). **Enter** prints `cd -- 'path'` (use `eval "$(git-whistles worktree-list)"` or `eval "$(git worktree-list)"` after shim — quotes required). **Esc** prints nothing. **Ctrl-d** destroys a linked worktree after confirm (`docker compose down` and/or `bin/teardown` when present, then `git worktree remove`). Cannot destroy the main checkout or the worktree the shell is in.
 
 - **`git stash-and-checkout <branch>`** — Stash (including untracked), checkout the branch, then pop the matching WIP stash if any.
 
