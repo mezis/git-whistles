@@ -11,23 +11,23 @@ class GitWhistles < Formula
   desc "Helpers for classic Git workflows (chop, ff-all-branches, list-branches, worktree-list, stash-and-checkout, staging, merge-po, changes, shim)"
   homepage "https://github.com/mezis/git-whistles"
   license "MIT"
-  version "2.0.0"
+  version "2.0.1"
 
   on_macos do
     on_arm do
-      url "https://github.com/mezis/git-whistles/releases/download/v2.0.0/git-whistles-macos-arm64.tar.gz"
-      sha256 "9204974caf1f4d635d5f364c54a4045d115b281adae2694c1644f45b693b48e4"
+      url "https://github.com/mezis/git-whistles/releases/download/v2.0.1/git-whistles-macos-arm64.tar.gz"
+      sha256 "e056d27e43ea993b5c88013e656493f92316ff142652f4af896bf8c1abe3667e"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/mezis/git-whistles/releases/download/v2.0.0/git-whistles-linux-amd64.tar.gz"
-      sha256 "75aaa95643b1b93c39df5f2c0da12f4750c8bf2932e4264e7eff3e046b9a160d"
+      url "https://github.com/mezis/git-whistles/releases/download/v2.0.1/git-whistles-linux-amd64.tar.gz"
+      sha256 "3c63a6f64fe11ad7dd9738955517f1f141e953cb58b5f9de87175346cf9caee5"
     end
     on_arm do
-      url "https://github.com/mezis/git-whistles/releases/download/v2.0.0/git-whistles-linux-arm64.tar.gz"
-      sha256 "0edb521bfe189f704b5cf8a98fbb83bba377497a5752ec3b8725f21b3beaf382"
+      url "https://github.com/mezis/git-whistles/releases/download/v2.0.1/git-whistles-linux-arm64.tar.gz"
+      sha256 "53082a8893fb2aa2ade6e22f61eb7deb4928f6a35ea2754c64797e6869975e62"
     end
   end
 
