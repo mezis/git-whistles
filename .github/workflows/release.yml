@@ -2,13 +2,14 @@ name: Release
 
 on:
   push:
-    tags: ['v*']
+    tags: ["v*"]
 
 permissions:
   contents: write
 
 jobs:
   build:
+    name: build (${{ matrix.artifact_name }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -40,15 +41,7 @@ jobs:
         env:
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
 
-      - name: Prepare archive (Linux)
-        if: matrix.target != 'aarch64-apple-darwin'
-        run: |
-          mkdir -p dist
-          cp target/${{ matrix.target }}/release/git-whistles dist/
-          tar czvf ${{ matrix.artifact_name }}.tar.gz -C dist git-whistles
-
-      - name: Prepare archive (macOS)
-        if: matrix.target == 'aarch64-apple-darwin'
+      - name: Pack tarball
         run: |
           mkdir -p dist
           cp target/${{ matrix.target }}/release/git-whistles dist/
@@ -59,22 +52,64 @@ jobs:
         with:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.artifact_name }}.tar.gz
+          retention-days: 1
 
   release:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: Checksums
+        id: sums
+        run: |
+          sha() { sha256sum "$1" | awk '{print $1}'; }
+          {
+            echo "linux_amd64=$(sha artifacts/git-whistles-linux-amd64/git-whistles-linux-amd64.tar.gz)"
+            echo "linux_arm64=$(sha artifacts/git-whistles-linux-arm64/git-whistles-linux-arm64.tar.gz)"
+            echo "macos_arm64=$(sha artifacts/git-whistles-macos-arm64/git-whistles-macos-arm64.tar.gz)"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*/*.tar.gz
           generate_release_notes: true
+          # Old Ruby tags (v1.0.2 and earlier) sort above 0.x. This release is
+          # the one Homebrew should download.
+          make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Write Homebrew formula
+        env:
+          VERSION: ${{ github.ref_name }}
+          MACOS_ARM64: ${{ steps.sums.outputs.macos_arm64 }}
+          LINUX_ARM64: ${{ steps.sums.outputs.linux_arm64 }}
+          LINUX_AMD64: ${{ steps.sums.outputs.linux_amd64 }}
+        run: |
+          version="${VERSION#v}"
+          script/write-homebrew-formula.sh "$version" "$MACOS_ARM64" "$LINUX_ARM64" "$LINUX_AMD64"
+
+      - name: Commit formula checksums
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          git add Formula/git-whistles.rb
+          if git diff --cached --quiet; then
+            echo "Formula already matches this release"
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -m "🔖 record Homebrew checksums for ${VERSION}"
+          git push origin HEAD:master

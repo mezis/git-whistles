@@ -4,9 +4,9 @@
 #   curl --proto '=https' --tlsv1.2 -fsSL \
 #     https://raw.githubusercontent.com/mezis/git-whistles/master/install.sh | bash
 #
-# Safe to re-run. curl | bash builds from source with Homebrew when brew is
-# available, otherwise with cargo (installing Rust via Homebrew or rustup).
-# ./install.sh inside a clone builds that clone.
+# Safe to re-run. curl | bash installs the published release with Homebrew when
+# brew is available, otherwise builds with cargo (installing Rust via Homebrew
+# or rustup). ./install.sh inside a clone builds that clone.
 
 set -euo pipefail
 
@@ -114,12 +114,14 @@ local_source_dir() {
 }
 
 install_with_brew() {
-  info "Installing git-whistles from source with Homebrew"
+  info "Installing git-whistles with Homebrew"
   brew tap mezis/git-whistles "$GIT_WHISTLES_GIT_URL" || return 1
+  # Reinstall picks up a formula that switched from a source HEAD build to
+  # the published release tarball.
   if brew list --formula git-whistles >/dev/null 2>&1; then
-    brew reinstall --HEAD mezis/git-whistles/git-whistles || return 1
+    brew reinstall mezis/git-whistles/git-whistles || return 1
   else
-    brew install --HEAD mezis/git-whistles/git-whistles || return 1
+    brew install mezis/git-whistles/git-whistles || return 1
   fi
 }
 

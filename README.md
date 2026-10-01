@@ -16,7 +16,7 @@ That builds git-whistles from source, puts `git-<command>` shims on your `PATH`,
 alias wt='eval "$(git-whistles worktree-list)"'
 ```
 
-Running it again is safe. When `brew` is available it installs with Homebrew (`brew install --HEAD`, which compiles this repo). Otherwise it installs Rust if needed (Homebrew, or rustup) and runs `cargo install`.
+Running it again is safe. When `brew` is available it installs the published release with Homebrew (Linux x86_64, Linux arm64, and macOS Apple Silicon). Otherwise it installs Rust if needed (Homebrew, or rustup) and runs `cargo install`.
 
 **Manual build**
 

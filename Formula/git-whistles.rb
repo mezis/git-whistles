@@ -4,9 +4,10 @@
 #   curl --proto '=https' --tlsv1.2 -fsSL \
 #     https://raw.githubusercontent.com/mezis/git-whistles/master/install.sh | bash
 #
-# Homebrew alone builds from source. There is no published bottle yet.
+# A version tag publishes release tarballs. That workflow rewrites this file
+# with their checksums. Until then, Homebrew builds master.
 #   brew tap mezis/git-whistles https://github.com/mezis/git-whistles
-#   brew install --HEAD mezis/git-whistles/git-whistles
+#   brew install mezis/git-whistles/git-whistles
 class GitWhistles < Formula
   desc "Helpers for classic Git workflows (chop, ff-all-branches, list-branches, worktree-list, stash-and-checkout, staging, merge-po, changes, shim)"
   homepage "https://github.com/mezis/git-whistles"
