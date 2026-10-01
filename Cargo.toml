@@ -1,6 +1,6 @@
 [package]
 name = "git-whistles"
-version = "2.0.0"
+version = "2.0.1"
 edition = "2021"
 description = "A few helpers for classic Git workflows"
 license = "MIT"
