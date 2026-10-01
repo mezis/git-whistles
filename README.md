@@ -4,38 +4,28 @@ Helpers for classic [Git](https://git-scm.com/) workflows. Written in Rust.
 
 ## Install
 
-**From GitHub Releases (recommended)**
-
-Download the tarball for your platform from [Releases](https://github.com/mezis/git-whistles/releases) and extract `git-whistles` into your `PATH` (e.g. `~/bin` or `/usr/local/bin`).
-
-**Homebrew (tap from this repo)**
+macOS and Linux. Restart your shell afterwards.
 
 ```bash
-brew tap mezis/git-whistles
-brew install git-whistles
+curl --proto '=https' --tlsv1.2 -fsSL https://raw.githubusercontent.com/mezis/git-whistles/master/install.sh | bash
 ```
 
-Upgrade: `brew update && brew upgrade git-whistles`
-
-**From source (Cargo)**
+That builds git-whistles from source, puts `git-<command>` shims on your `PATH`, and defines:
 
 ```bash
-cargo install --path .
-# or from crates.io once published:
-# cargo install git-whistles
+alias wt='eval "$(git-whistles worktree-list)"'
 ```
 
-**Optional: install shims**
+Running it again is safe. When `brew` is available it installs with Homebrew (`brew install --HEAD`, which compiles this repo). Otherwise it installs Rust if needed (Homebrew, or rustup) and runs `cargo install`.
 
-After installing the binary, you can add symlinks so each Git-style command is available as `git-<subcommand>` (e.g. `git-chop`, `git-merge-po`). `shim` and `unshim` are not shimmed; run them as `git-whistles shim` / `git-whistles unshim`.
+**Manual build**
 
 ```bash
-git-whistles shim
-# Default target is /usr/local/bin. Use another directory:
-git-whistles shim --dir ~/bin
+cargo install --path . --locked
+git-whistles shim --dir ~/.local/bin
 ```
 
-Remove shims: `git-whistles unshim [--dir /usr/local/bin]`
+`shim` and `unshim` are not shimmed; run them as `git-whistles shim` / `git-whistles unshim`. Remove shims with `git-whistles unshim --dir ~/.local/bin`.
 
 ## Debugging
 
@@ -57,7 +47,7 @@ git-changes -v
 
 - **`git list-branches [-l] [-r] [-i integration-branch] [-p]`** — List local or remote branches and their distance to an integration branch (default: same primary as `git changes`: `origin/HEAD` if set, else `origin/main` or `origin/master`). `-p` porcelain (CSV).
 
-- **`git worktree-list`** — Interactive table of worktrees from every main clone this command has been run in (repo, branch, path; long paths elide the prefix). Arrow keys move; typing letters/digits filters (subsequence match). **Enter** prints `cd -- 'path'` (use `eval "$(git-whistles worktree-list)"` or `eval "$(git worktree-list)"` after shim — quotes required). **Esc** prints nothing. **Ctrl-d** destroys a linked worktree after confirm (`docker compose down` and/or `bin/teardown` when present, then `git worktree remove`). Cannot destroy the main checkout or the worktree the shell is in.
+- **`git worktree-list`** / **`wt`** — Interactive table of worktrees from every main clone this command has been run in (repo, branch, path; long paths elide the prefix). Arrow keys move; typing letters/digits filters (subsequence match). **Enter** prints `cd -- 'path'` (`wt` is `eval "$(git-whistles worktree-list)"`; quotes required). **Esc** prints nothing. **Ctrl-d** destroys a linked worktree after confirm (`docker compose down` and/or `bin/teardown` when present, then `git worktree remove`). Cannot destroy the main checkout or the worktree the shell is in.
 
 - **`git stash-and-checkout <branch>`** — Stash (including untracked), checkout the branch, then pop the matching WIP stash if any.
 
